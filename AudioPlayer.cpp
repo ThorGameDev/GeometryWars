@@ -1,4 +1,5 @@
 #include "AudioPlayer.h"
+#include "CONST.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
 #include <iostream>
@@ -31,6 +32,7 @@ static SoundClip* LoadSound(const char *path)
         SDL_Log("Couldn't create audio stream: %s", SDL_GetError());
         return nullptr;
     } 
+    SDL_free(full_path);
 
     return sound;
 }
@@ -38,27 +40,34 @@ static SoundClip* LoadSound(const char *path)
 AudioPlayer::AudioPlayer()
 {
     SDL_Init(SDL_INIT_AUDIO);
-    std::cout << "Create AudioPlayer" << std::endl;
-    song = LoadSound("resources/song.wav");
+    song = LoadSound("resources/EvolvedMode.wav");
     SFX = LoadSound("resources/sound.wav");
     data = new SoundData();
     data->audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
     playSong();
+    std::cout << "AudioPlayer has been created" << std::endl;
 }
 
 AudioPlayer::~AudioPlayer()
 {
-    SDL_CloseAudioDevice(data->audio_device);
-    SDL_free(song->data);
-    SDL_free(SFX->data);
+    if (data)
+        SDL_CloseAudioDevice(data->audio_device);
+    if (song)
+        SDL_free(song->data);
+    if (SFX)
+        SDL_free(SFX->data);
     delete song;
     delete SFX;
     delete data;
-    std::cout << "Destroyed AudioPlayer" << std::endl;
+    std::cout << "AudioPlayer has been destroyed" << std::endl;
 }
 
 void AudioPlayer::playSound()
 {
+    if(!SFX){
+        std::cout << "Tried to play a missing sound!" << std::endl;
+        return;
+    }
     SFX->stream = SDL_CreateAudioStream(&SFX->spec, NULL);
     if (!SFX->stream) {
         SDL_Log("Couldn't create audio stream: %s", SDL_GetError());
@@ -69,6 +78,11 @@ void AudioPlayer::playSound()
 
 void AudioPlayer::playSong()
 {
+    if (!MUSIC) return;
+    if(!song){
+        std::cout << "Tried to play a missing song!" << std::endl;
+        return;
+    }
     SDL_BindAudioStream(data->audio_device, song->stream);
     SDL_ResumeAudioDevice(data->audio_device);
 }
@@ -80,6 +94,7 @@ void AudioPlayer::pauseSong()
 
 void AudioPlayer::checkRestart()
 {
+    if (!MUSIC || !song) return;
     if (SDL_GetAudioStreamQueued(song->stream) < ((int) song->data_len)) {
         SDL_PutAudioStreamData(song->stream, song->data, (int) song->data_len);
     }

@@ -2,7 +2,7 @@
 CXX = clang++
 
 # Define the source files
-SOURCES = ./game.cpp ./AudioPlayer.cpp
+SOURCES = ./game.cpp ./AudioPlayer.cpp ./sprites.cpp ./utils.cpp ./foe.cpp
 
 # Define the object files
 OBJECTS = $(SOURCES:.cpp=.o)
@@ -12,12 +12,12 @@ CXXFLAGS = -O3
 
 # SDL flags
 #`pkg-config --libs --cflags sdl3`
-SDL_FLAGS = `pkg-config --cflags sdl3`
-SDL_LIBS = `pkg-config --libs sdl3`
+SDL_FLAGS = `pkg-config --cflags sdl3 sdl3-image`
+SDL_LIBS = `pkg-config --libs sdl3 sdl3-image`
 
 # Combine all flags and libraries
-FLAGS = $(CXXFLAGS) $(SDL_FLAGS)
-LIBS = $(SDL_LIBS)
+FLAGS = $(CXXFLAGS) $(SDL_FLAGS) $(SDL_IMAGE_FLAGS)
+LIBS = $(SDL_LIBS) $(SDL_IMG)
 
 # Define the target executable
 TARGET = Game
