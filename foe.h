@@ -1,6 +1,7 @@
 #ifndef FOE_DATA
 #define FOE_DATA
 #include "utils.h"
+#include <chrono>
 
 class Game;
 
@@ -9,6 +10,7 @@ public:
     foe(transform pos, int spriteID, Game* master) : pos(pos), spriteID(spriteID), master(master) {};
     virtual ~foe() = default;
     virtual void move() = 0;
+    virtual void death(bool byClearing) = 0;
     transform getPos() { return pos; };
     int getSpriteID() { return spriteID; }; 
 protected:
@@ -18,26 +20,30 @@ protected:
 };
 
 class pinwheel : public foe {
-    double speedX;
-    double speedY;
+    float speedX;
+    float speedY;
 public:
     pinwheel(transform pos, Game* master);
     void move() override;
+    void death(bool byClearing) override;
 };
 
 class diamond : public foe {
-    double speedX;
-    double speedY;
+    float speedX;
+    float speedY;
+    float birthday;
 public:
     diamond(transform pos, Game* master);
     void move() override;
+    void death(bool byClearing) override;
 };
 
 class bubble : public foe {
-    double speedX;
-    double speedY;
+    float speedX;
+    float speedY;
 public:
     bubble(transform pos, Game* master);
     void move() override;
+    void death(bool byClearing) override;
 };
 #endif

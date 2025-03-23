@@ -12,13 +12,13 @@ int Int(int min, int max)
     return distr(gen);
 }
 
-double Double(double min, double max)
+float Float(float min, float max)
 {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_real_distribution<> distr(min, max);
 
-    return distr(gen);
+    return (float)distr(gen);
 }
 
 }

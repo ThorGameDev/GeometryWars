@@ -66,11 +66,7 @@ void ScreenDrawer::drawSquare(float x, float y, float scaleX, float scaleY, int 
 }
 
 void ScreenDrawer::drawSprite(transform pos, int index) {
-    float x = pos.x;
-    float y = pos.y;
-    float scaleX = pos.scaleX;
-    float scaleY = pos.scaleY;
-    SDL_FRect rect = {x - scaleX/2, y - scaleY/2, scaleX, scaleY};
+    SDL_FRect rect = {pos.x - pos.scaleX/2, pos.y - pos.scaleY/2, pos.scaleX, pos.scaleY};
     SDL_RenderTextureRotated(renderer, sprites[index]->texture, NULL, &rect, pos.theta, NULL, SDL_FLIP_NONE);
 }
 

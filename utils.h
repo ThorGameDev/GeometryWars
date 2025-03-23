@@ -3,15 +3,22 @@
 
 namespace RNG {
     int Int(int min, int max);
-    double Double(double min, double max);
+    float Float(float min, float max);
 }
 
 struct transform {
-    double x;
-    double y;
+    float x;
+    float y;
     double theta;
-    double scaleX;
-    double scaleY;
+    float scaleX;
+    float scaleY;
+};
+
+struct bullet {
+    float x;
+    float y;
+    float speedX;
+    float speedY;
 };
 
 #endif

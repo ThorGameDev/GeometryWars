@@ -2,13 +2,13 @@
 CXX = clang++
 
 # Define the source files
-SOURCES = ./game.cpp ./AudioPlayer.cpp ./sprites.cpp ./utils.cpp ./foe.cpp
+SOURCES = ./game.cpp ./AudioPlayer.cpp ./sprites.cpp ./utils.cpp ./foe.cpp ./player.cpp
 
 # Define the object files
-OBJECTS = $(SOURCES:.cpp=.o)
+OBJECTS = $(SOURCES:.cpp=.ll)
 
 # Define the flags
-CXXFLAGS = -O3
+CXXFLAGS = -O3 -ffast-math -march=native -flto
 
 # SDL flags
 #`pkg-config --libs --cflags sdl3`
@@ -27,11 +27,11 @@ all: $(TARGET)
 
 # Rule to build the target
 $(TARGET): $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LIBS) -o $(TARGET)
+	$(CXX) -O3 $(OBJECTS) $(LIBS) -o $(TARGET)
 
 # Pattern rule for building object files
-%.o: %.cpp
-	$(CXX) $(FLAGS) -c $< -o $@
+%.ll: %.cpp
+	$(CXX) $(FLAGS) -S -emit-llvm -c $< -o $@
 
 # Clean rule
 clean:

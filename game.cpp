@@ -1,4 +1,5 @@
 #include "game.h"
+#include "player.h"
 #include "CONST.h"
 #include "utils.h"
 #include "sprites.h"
@@ -10,6 +11,7 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_keycode.h>
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -23,31 +25,35 @@
 
 void Game::newGame()
 {
-    lastMeasure = std::chrono::steady_clock::now();
-    firstFrame = true;
-    player.pos.x = SCREEN_X / 2;
-    player.pos.y = SCREEN_Y / 2;
-    player.pos.theta = 0;
-    player.pos.scaleX = PLAYERSCALE;
-    player.pos.scaleY = PLAYERSCALE;
     intensity = 1;
     timeTillWave = TIMEPERWAVE;
-    currentWaveID = 0;
     lost = false;
     lostTime = 0;
     audio.playSong();
+    player->init();
+    lastMeasure = std::chrono::steady_clock::now();
 }
 
 Game::Game()
 {
+    player = new Player(this);
     newGame();
+    if (MAXIMUM_INITIAL_INTENSITY) {
+        intensity = MAX_FOES;
+        spawn();
+    }
     std::cout << "Game has been created" << std::endl;
 }
 
 Game::~Game()
 {
+    delete player;
     SDL_Quit();
     std::cout << "Game has been destroyed" << std::endl;
+}
+
+transform Game::getPlayerPos(){
+    return player->getPos();
 }
 
 void Game::requestRender()
@@ -56,23 +62,29 @@ void Game::requestRender()
     {
         drawer.drawSprite(things[i]->getPos(), things[i]->getSpriteID());
     }
-    drawer.drawSprite(player.pos, 0);
+    for (int i = 0; i < bullets.size(); i++) 
+    {
+        drawer.drawSquare(bullets[i]->x, bullets[i]->y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
+    }
+    drawer.drawSprite(player->getPos(), 0);
     
     drawer.frame();
 }
 
-void Game::arroundAttack()
+void Game::spawn()
 {
-    for(int i = 0; i < intensity; i++)
+    int num = intensity;
+    if (num > MAX_FOES - things.size())
+        num = MAX_FOES - things.size();
+
+    for(int i = 0; i < num; i++)
     {
         transform pos;
-        double angle = RNG::Double(0, 360); 
-        int L = SCREEN_X - PINWHEEL_SCALE;
-        int H = SCREEN_Y - PINWHEEL_SCALE;
-        pos.x = std::cos(angle) * L/2 + L/2;
-        pos.y = std::sin(angle) * H/2 + H/2;
-        pos.scaleY = 100;
-        pos.scaleX = 100;
+        do {
+            pos.x = RNG::Float(0, SCREEN_X);
+            pos.y = RNG::Float(0, SCREEN_Y);
+        } while (std::sqrt(std::pow(pos.x - player->getPos().x, 2) + std::pow(pos.y - player->getPos().y, 2)) < MIN_DIST_FROM_PLAYER);
+
         int idx = RNG::Int(0, 100);
         if (idx <= 50)
             things.push_back(new pinwheel(pos, this));
@@ -83,72 +95,14 @@ void Game::arroundAttack()
     }
 }
 
-void Game::input()
+void Game::shoot(float posX, float posY, float speedX, float speedY)
 {
-    while(SDL_PollEvent(&Event))
-    {
-#ifndef __EMSCRIPTEN__
-        if (Event.type == SDL_EVENT_QUIT)
-        {
-            quitting = true;
-        }
-#endif
-        if (Event.type == SDL_EVENT_KEY_DOWN)
-        {
-            switch(Event.key.key)
-            {
-#ifndef __EMSCRIPTEN__
-                case SDLK_ESCAPE:
-                    quitting = true;
-                    break;
-#endif
-                case SDLK_UP:
-                case SDLK_W:
-                    player.up = true;
-                    break;
-                case SDLK_DOWN:
-                case SDLK_S:
-                    player.down = true;
-                    break;
-                case SDLK_LEFT:
-                case SDLK_A:
-                    player.left = true;
-                    break;
-                case SDLK_RIGHT:
-                case SDLK_D:
-                    player.right = true;
-                    break;
-                case SDLK_SPACE:
-                    //player.change = true;
-                    break;
-            }
-        }
-        if (Event.type == SDL_EVENT_KEY_UP)
-        {
-            switch(Event.key.key)
-            {
-                case SDLK_UP:
-                case SDLK_W:
-                    player.up = false;
-                    break;
-                case SDLK_DOWN:
-                case SDLK_S:
-                    player.down = false;
-                    break;
-                case SDLK_LEFT:
-                case SDLK_A:
-                    player.left = false;
-                    break;
-                case SDLK_RIGHT:
-                case SDLK_D:
-                    player.right = false;
-                    break;
-                case SDLK_SPACE:
-                    //player.change = false;
-                    break;
-            }
-        }
-    }
+    bullet* projectile = new bullet();
+    projectile->x = posX;
+    projectile->y = posY;
+    projectile->speedX = speedX;
+    projectile->speedY = speedY;
+    bullets.push_back(projectile);
 }
 
 void Game::manageWaves()
@@ -158,13 +112,7 @@ void Game::manageWaves()
     {
         timeTillWave += TIMEPERWAVE;
         //int choice = randomRange(0, 2);
-        arroundAttack();
-
-        while(things.size() >= MAX_FOES){
-            foe* thing = things.front();
-            things.pop_front();
-            delete thing;
-        }
+        spawn();
 
         currentWaveID += 1;
         if(currentWaveID % 5 == 0)
@@ -172,69 +120,96 @@ void Game::manageWaves()
     }
 }
 
-bool Game::checkPlayerDeath()
+void Game::collision()
 {
     int topX, topY, bottomX, bottomY;
-    topX = player.pos.x + ((double)HIDDENPLAYERSCALE/2);
-    topY = player.pos.y + ((double)HIDDENPLAYERSCALE/2);
-    bottomX = player.pos.x - ((double)HIDDENPLAYERSCALE/2);
-    bottomY = player.pos.y - ((double)HIDDENPLAYERSCALE/2);
+    topX = player->getPos().x + ((float)HIDDENPLAYERSCALE/2);
+    topY = player->getPos().y + ((float)HIDDENPLAYERSCALE/2);
+    bottomX = player->getPos().x - ((float)HIDDENPLAYERSCALE/2);
+    bottomY = player->getPos().y - ((float)HIDDENPLAYERSCALE/2);
 
-    for(int i=0; i < things.size(); i++)
+    for(int i = things.size() - 1; i >= 0; i--)
     {
-        int _topX = things[i]->getPos().x + ((double)things[i]->getPos().scaleX/2);
-        int _topY = things[i]->getPos().y + ((double)things[i]->getPos().scaleY/2);
-        int _bottomX = things[i]->getPos().x - ((double)things[i]->getPos().scaleX/2);
-        int _bottomY = things[i]->getPos().y - ((double)things[i]->getPos().scaleY/2);
-        bool x = false;
-        bool y = false;
-        if(!(_topX<bottomX||topX<_bottomX))
-            x = true;
-        if(!(_topY<bottomY||topY<_bottomY))
-            y = true;
-        if(x && y)
-            return true;
+        int _topX = things[i]->getPos().x + ((float)things[i]->getPos().scaleX/2);
+        int _topY = things[i]->getPos().y + ((float)things[i]->getPos().scaleY/2);
+        int _bottomX = things[i]->getPos().x - ((float)things[i]->getPos().scaleX/2);
+        int _bottomY = things[i]->getPos().y - ((float)things[i]->getPos().scaleY/2);
+        bool skip = false;
+        for (int j = bullets.size() - 1; j >= 0; j--) {
+            if (!(_topX>bullets[j]->x && bullets[j]->x>_bottomX &&
+                _topY>bullets[j]->y&&bullets[j]->y>_bottomY))
+                continue;
+
+            foe* thing = things[i];
+            thing->death(false);
+            things.erase(things.begin() + i);
+            delete thing;
+
+            bullet* bt = bullets[j];
+            bullets.erase(bullets.begin() + j);
+            delete bt;
+
+            skip = true;
+            break;
+        }
+        if (skip) continue;
+        if( !(_topX<bottomX||topX<_bottomX) &&
+            !(_topY<bottomY||topY<_bottomY)  ) {
+            foe* thing = things[i];
+            thing->death(false);
+            delete thing;
+            things.erase(things.begin() + i);
+            player->kill();
+            continue;
+        }
     }
-    if(topY < 0 || topX < 0 || bottomX > SCREEN_X || bottomY > SCREEN_Y)
-        return true;
-    return false;
 }
 
 void Game::moveObjects()
 {
-    for(int i = 0; i < things.size(); i++)
-    {
+    for(int i = things.size() - 1; i >= 0; i--) {
         things[i]->move();
     }
-
-    int x = player.right - player.left;
-    int y = player.down - player.up;
-    double magnitude = std::sqrt(x*x + y*y);
-    int speed = PLAYERSPEED;
-    if(magnitude >= 0.2)
-    {
-        player.pos.x += (x/magnitude) * deltaTime * speed;
-        player.pos.y += (y/magnitude) * deltaTime * speed;
+    for(int i = bullets.size() - 1; i >= 0; i--) {
+        bullets[i]->x += bullets[i]->speedX * deltaTime;
+        bullets[i]->y += bullets[i]->speedY * deltaTime;
+        if (bullets[i]->x > SCREEN_X - BULLET_SIZE/2 || bullets[i]->x <= BULLET_SIZE/2 ||
+            bullets[i]->y > SCREEN_Y - BULLET_SIZE/2 || bullets[i]->y <= BULLET_SIZE/2) {
+            bullet* bt = bullets[i];
+            bullets.erase(bullets.begin() + i);
+            delete bt;
+        }
     }
+    player->move();
 }
 
 void Game::loopItteration()
 {
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-    double timeElapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - lastMeasure).count();
+    float timeElapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - lastMeasure).count();
     lastMeasure = now;
     deltaTime = timeElapsed / 1000000;
-    if( firstFrame == true)
-    {
-        firstFrame = false;
-        return;
+    
+    playtime += deltaTime;
+
+    if (SHOW_FPS){
+        fpsSum += deltaTime;
+        framesElapsed += 1;
+        if (fpsSum >= 1){
+            std::cout << "FPS: " << framesElapsed << std::endl;
+            fpsSum -= 1;
+            framesElapsed = 0;
+        }
     }
-    input();
+
+    diamondDeltaSpeedConv = deltaTime * DIAMOND_SPEED * DIAMOND_CONVERGANCE;
+    bubbleDeltaSpeedConv = deltaTime * BUBBLE_SPEED * BUBBLE_CONVERGANCE;
+
     if (!lost)
         manageWaves();
     moveObjects();
-    bool death = checkPlayerDeath();
-    if(death)
+    collision();
+    if(player->isDead())
     {
         while(things.size() > 0){
             foe* thing = things.front();
@@ -243,17 +218,12 @@ void Game::loopItteration()
         }
         audio.pauseSong();
         lostTime += deltaTime;
-        player.pos.x = 100000;
         if(lostTime >= 2)
             newGame();
     }
 
     audio.checkRestart();
     requestRender();
-}
-
-transform Game::getPlayerPos() {
-    return player.pos;
 }
 
 Game game;

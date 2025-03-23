@@ -1,7 +1,6 @@
 #ifndef GAME
 #define GAME
 
-#include <SDL3/SDL_events.h>
 #include <chrono>
 #include <deque>
 #include "utils.h"
@@ -10,27 +9,31 @@
 #include "AudioPlayer.h"
 
 class foe;
-
-struct Player
-{
-    transform pos;
-    bool up = false;
-    bool down = false;
-    bool left = false;
-    bool right = false;
-};
+class Player;
 
 class Game
 {
     public:
         Game();
         ~Game();
-        void input();
         void loopItteration();
-        transform getPlayerPos();
         bool quitting = false;
         bool lost = false;
-        double deltaTime;
+        float deltaTime;
+        transform getPlayerPos();
+        void shoot(float posX, float posY, float speedX, float speedY);
+        
+        float playtime = 0;
+
+        // Optimizations
+        float diamondDeltaSpeedConv;
+        float bubbleDeltaSpeedConv;
+
+        // Diagnostics
+        float fpsSum;
+        int framesElapsed;
+
+
     private:
         //Timing
         std::chrono::time_point<std::chrono::steady_clock> lastMeasure;
@@ -39,26 +42,25 @@ class Game
         void newGame();
         void manageWaves();
         void moveObjects();
-        bool checkPlayerDeath();
+        void collision();
         void requestRender();
         void showScore();
 
         //Attacks
-        void arroundAttack();
+        void spawn();
 
         //Necessary Variables
         std::deque<foe*> things;
-        SDL_Event Event;
-        bool firstFrame;
-        double lostTime;
+        std::deque<bullet*> bullets;
+        float lostTime;
 
         //Wave Manager
-        double timeTillWave = TIMEPERWAVE;
+        float timeTillWave = TIMEPERWAVE;
         int currentWaveID = 0;
         int intensity;
         
         //Player
-        Player player;
+        Player* player;
 
         //Sound
         AudioPlayer audio;
