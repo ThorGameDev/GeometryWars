@@ -43,6 +43,8 @@ ScreenDrawer::ScreenDrawer() {
     sprites.push_back(LoadSprite("resources/pinwheel.png", renderer));
     sprites.push_back(LoadSprite("resources/diamond.png", renderer));
     sprites.push_back(LoadSprite("resources/bubble.png", renderer));
+    sprites.push_back(LoadSprite("resources/splitSquare.png", renderer));
+    sprites.push_back(LoadSprite("resources/subSquare.png", renderer));
     std::cout << "ScreenDrawer has been created" << std::endl;
 }
 

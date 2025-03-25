@@ -1,7 +1,10 @@
 #include "player.h"
 #include "game.h"
 #include "CONST.h"
+#include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_joystick.h>
 #include <cmath>
 #include <iostream>
 #include <ostream>
@@ -18,6 +21,14 @@ void Player::init() {
 
 Player::Player(Game* master) {
     this->master = master;
+    if ( !SDL_Init( SDL_INIT_JOYSTICK ) ){
+        std::cout << "Couldn't initialize SDL: " <<  SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    SDL_Joystick* fireController = NULL;
+    std::cout << *SDL_GetJoysticks(NULL);
+
 }
 
 Player::~Player(){
@@ -27,6 +38,7 @@ Player::~Player(){
 void Player::move()
 {
     if (dead) return;
+
     static bool up;
     static bool down;
     static bool left;
@@ -35,6 +47,7 @@ void Player::move()
     static bool shootDown;
     static bool shootLeft;
     static bool shootRight;
+
     while(SDL_PollEvent(&Event))
     {
         if (Event.type == SDL_EVENT_QUIT)

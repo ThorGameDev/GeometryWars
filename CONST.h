@@ -19,7 +19,15 @@ const int BUBBLE_SCALE = 15;
 const float BUBBLE_SPEED = 280;
 const float BUBBLE_CONVERGANCE = 2.8;
 
-const int MAX_FOES = 50000;
+const int SPLIT_SQUARE_SCALE = 30;
+const float SPLIT_SQUARE_SPEED = 180;
+const float SPLIT_SQUARE_CONVERGANCE = 3.5;
+
+const int SUB_SQUARE_SCALE = 15;
+const float SUB_SQUARE_SPEED = 180;
+const float SUB_SQUARE_CONVERGANCE = 3.5;
+
+const int MAX_FOES = 1000;
 const int MIN_DIST_FROM_PLAYER = 300;
 
 //Player
@@ -27,9 +35,9 @@ const int PLAYERSCALE = 40;
 const int HIDDENPLAYERSCALE = 25;
 const int PLAYERSPEED = 250;
 
-const float TIME_PER_BULLET = 0.3;
+const float TIME_PER_BULLET = 0.1;
 const float BULLET_SPEED = 1000;
-const float BULLET_SIZE = 2;
+const float BULLET_SIZE = 3;
 const float BULLET_PAIR_DIST = 3;
 
 //Wave Management
@@ -44,6 +52,6 @@ const int PHASES = 2;
 const bool MUSIC = false;
 const bool PLAYER_IMORTAL = true;
 const bool SHOW_FPS = true;
-const bool MAXIMUM_INITIAL_INTENSITY = false;
+const bool MAXIMUM_INITIAL_INTENSITY = true;
 
 #endif

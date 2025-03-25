@@ -22,12 +22,15 @@ class Game
         float deltaTime;
         transform getPlayerPos();
         void shoot(float posX, float posY, float speedX, float speedY);
+        void instantiate(foe* creation);
         
         float playtime = 0;
 
         // Optimizations
         float diamondDeltaSpeedConv;
         float bubbleDeltaSpeedConv;
+        float splitSquareDeltaSpeedConv;
+        float subSquareDeltaSpeedConv;
 
         // Diagnostics
         float fpsSum;
@@ -45,6 +48,8 @@ class Game
         void collision();
         void requestRender();
         void showScore();
+        void destroy(int victimID, bool byClearing = false);
+        void destroy(foe* victim, bool byClearing = false);
 
         //Attacks
         void spawn();

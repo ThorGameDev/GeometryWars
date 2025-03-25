@@ -46,4 +46,22 @@ public:
     void move() override;
     void death(bool byClearing) override;
 };
+
+class splitSquare : public foe {
+    float speedX;
+    float speedY;
+public:
+    splitSquare(transform pos, Game* master); 
+    void move() override;
+    void death(bool byClearing) override;
+};
+
+class subSquare : public foe {
+    float speedX;
+    float speedY;
+public:
+    subSquare(transform pos, Game* master, float speedX, float speedY);
+    void move() override;
+    void death(bool byClearing) override;
+};
 #endif

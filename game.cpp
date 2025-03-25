@@ -88,11 +88,21 @@ void Game::spawn()
         int idx = RNG::Int(0, 100);
         if (idx <= 50)
             things.push_back(new pinwheel(pos, this));
-        else if (idx <= 80)
+        else if (idx <= 75)
             things.push_back(new diamond(pos, this));
+        else if (idx <= 98)
+            things.push_back(new splitSquare(pos, this));
         else if (idx <= 100)
             things.push_back(new bubble(pos, this));
     }
+}
+
+void Game::instantiate(foe* creation)
+{
+    if (MAX_FOES > things.size())
+        things.push_back(creation);
+    else 
+        destroy(creation);
 }
 
 void Game::shoot(float posX, float posY, float speedX, float speedY)
@@ -120,6 +130,20 @@ void Game::manageWaves()
     }
 }
 
+void Game::destroy(int victimID, bool byClearing)
+{
+    foe* thing = things[victimID];
+    thing->death(byClearing);
+    things.erase(things.begin() + victimID);
+    delete thing;
+}
+
+void Game::destroy(foe* victim, bool byClearing)
+{
+    victim->death(byClearing);
+    delete victim;
+}
+
 void Game::collision()
 {
     int topX, topY, bottomX, bottomY;
@@ -140,10 +164,7 @@ void Game::collision()
                 _topY>bullets[j]->y&&bullets[j]->y>_bottomY))
                 continue;
 
-            foe* thing = things[i];
-            thing->death(false);
-            things.erase(things.begin() + i);
-            delete thing;
+            destroy(i); 
 
             bullet* bt = bullets[j];
             bullets.erase(bullets.begin() + j);
@@ -155,10 +176,7 @@ void Game::collision()
         if (skip) continue;
         if( !(_topX<bottomX||topX<_bottomX) &&
             !(_topY<bottomY||topY<_bottomY)  ) {
-            foe* thing = things[i];
-            thing->death(false);
-            delete thing;
-            things.erase(things.begin() + i);
+            destroy(i);
             player->kill();
             continue;
         }
@@ -204,6 +222,8 @@ void Game::loopItteration()
 
     diamondDeltaSpeedConv = deltaTime * DIAMOND_SPEED * DIAMOND_CONVERGANCE;
     bubbleDeltaSpeedConv = deltaTime * BUBBLE_SPEED * BUBBLE_CONVERGANCE;
+    splitSquareDeltaSpeedConv = deltaTime * SPLIT_SQUARE_SPEED * SPLIT_SQUARE_CONVERGANCE;
+    subSquareDeltaSpeedConv = deltaTime * SUB_SQUARE_SPEED * SUB_SQUARE_CONVERGANCE;
 
     if (!lost)
         manageWaves();
@@ -211,10 +231,8 @@ void Game::loopItteration()
     collision();
     if(player->isDead())
     {
-        while(things.size() > 0){
-            foe* thing = things.front();
-            things.pop_front();
-            delete thing;
+        for (int i = things.size() - 1; i > 0; i--){
+            destroy(i, true);
         }
         audio.pauseSong();
         lostTime += deltaTime;

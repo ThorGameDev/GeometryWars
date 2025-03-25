@@ -62,12 +62,12 @@ diamond::diamond(transform pos, Game* master) : foe(pos, 2, master) {
 }
 
 void diamond::move() {
-    float redirX = master->getPlayerPos().x - pos.x;
-    float redirY = master->getPlayerPos().y - pos.y;
+    float dirX = master->getPlayerPos().x - pos.x;
+    float dirY = master->getPlayerPos().y - pos.y;
+    float dirMagnitude = std::sqrt(dirX*dirX + dirY*dirY);
+    float redirX = speedX + dirX / dirMagnitude * master->diamondDeltaSpeedConv;
+    float redirY = speedY + dirY / dirMagnitude * master->diamondDeltaSpeedConv;
     float magnitude = std::sqrt(redirX*redirX + redirY*redirY);
-    redirX = speedX + redirX / magnitude * master->diamondDeltaSpeedConv;
-    redirY = speedY + redirY / magnitude * master->diamondDeltaSpeedConv;
-    magnitude = std::sqrt(redirX*redirX + redirY*redirY);
     speedX = redirX / magnitude * DIAMOND_SPEED;
     speedY = redirY / magnitude * DIAMOND_SPEED;
     pos.x += speedX * master->deltaTime;
@@ -98,8 +98,6 @@ void bubble::move() {
     float redirX = master->getPlayerPos().x - pos.x;
     float redirY = master->getPlayerPos().y - pos.y;
     float magnitude = std::sqrt(redirX*redirX + redirY*redirY);
-    //redirX = speedX + redirX / magnitude * master->deltaTime * BUBBLE_SPEED * BUBBLE_CONVERGANCE;
-    //redirY = speedY + redirY / magnitude * master->deltaTime * BUBBLE_SPEED * BUBBLE_CONVERGANCE;
     redirX = speedX + redirX / magnitude * master->bubbleDeltaSpeedConv;
     redirY = speedY + redirY / magnitude * master->bubbleDeltaSpeedConv;
     magnitude = std::sqrt(redirX*redirX + redirY*redirY);
@@ -111,5 +109,67 @@ void bubble::move() {
 }
 
 void bubble::death(bool byClearing) {
+    return;
+}
+
+splitSquare::splitSquare(transform pos, Game* master) : foe(pos, 4, master) {
+    this->pos.theta = 0;
+    this->pos.scaleX = SPLIT_SQUARE_SCALE;
+    this->pos.scaleY = SPLIT_SQUARE_SCALE;
+    speedX = master->getPlayerPos().x - pos.x;
+    speedY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(speedX*speedX + speedY*speedY);
+    speedX = speedX / magnitude * SPLIT_SQUARE_SPEED;
+    speedY = speedY / magnitude * SPLIT_SQUARE_SPEED;
+}
+
+void splitSquare::move() {
+    float redirX = master->getPlayerPos().x - pos.x;
+    float redirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(redirX*redirX + redirY*redirY);
+    redirX = speedX + redirX / magnitude * master->splitSquareDeltaSpeedConv;
+    redirY = speedY + redirY / magnitude * master->splitSquareDeltaSpeedConv;
+    magnitude = std::sqrt(redirX*redirX + redirY*redirY);
+    speedX = redirX / magnitude * SPLIT_SQUARE_SPEED;
+    speedY = redirY / magnitude * SPLIT_SQUARE_SPEED;
+    pos.x += speedX * master->deltaTime;
+    pos.y += speedY * master->deltaTime;
+    bump(&pos, &speedX, &speedY);
+}
+
+void splitSquare::death(bool byClearing) {
+    if ( !byClearing ){
+        float diag = std::sqrt(2)/2 * SUB_SQUARE_SPEED;
+        master->instantiate(new subSquare(pos, master, diag, diag));
+        master->instantiate(new subSquare(pos, master, diag, -diag));
+        master->instantiate(new subSquare(pos, master, -diag, diag));
+        master->instantiate(new subSquare(pos, master, -diag, -diag));
+    }
+    return;
+}
+
+subSquare::subSquare(transform pos, Game* master, float speedX, float speedY) : foe(pos, 5, master) {
+    this->pos.theta = 0;
+    this->pos.scaleX = SUB_SQUARE_SCALE;
+    this->pos.scaleY = SUB_SQUARE_SCALE;
+    this->speedX = speedX;
+    this->speedY = speedY;
+}
+
+void subSquare::move() {
+    float redirX = master->getPlayerPos().x - pos.x;
+    float redirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(redirX*redirX + redirY*redirY);
+    redirX = speedX + redirX / magnitude * master->subSquareDeltaSpeedConv;
+    redirY = speedY + redirY / magnitude * master->subSquareDeltaSpeedConv;
+    magnitude = std::sqrt(redirX*redirX + redirY*redirY);
+    speedX = redirX / magnitude * SUB_SQUARE_SPEED;
+    speedY = redirY / magnitude * SUB_SQUARE_SPEED;
+    pos.x += speedX * master->deltaTime;
+    pos.y += speedY * master->deltaTime;
+    bump(&pos, &speedX, &speedY);
+}
+
+void subSquare::death(bool byClearing) {
     return;
 }
