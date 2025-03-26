@@ -1,8 +1,10 @@
 #include "player.h"
 #include "game.h"
 #include "CONST.h"
+#include "utils.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_joystick.h>
 #include <cmath>
@@ -21,14 +23,10 @@ void Player::init() {
 
 Player::Player(Game* master) {
     this->master = master;
-    if ( !SDL_Init( SDL_INIT_JOYSTICK ) ){
+    if ( !SDL_Init( SDL_INIT_GAMEPAD ) ){
         std::cout << "Couldn't initialize SDL: " <<  SDL_GetError() << std::endl;
         exit(1);
     }
-
-    SDL_Joystick* fireController = NULL;
-    std::cout << *SDL_GetJoysticks(NULL);
-
 }
 
 Player::~Player(){
@@ -50,11 +48,25 @@ void Player::move()
 
     while(SDL_PollEvent(&Event))
     {
-        if (Event.type == SDL_EVENT_QUIT)
+        if (Event.type == SDL_EVENT_GAMEPAD_ADDED) {
+            if (controller == NULL){
+                controller = SDL_OpenGamepad(Event.gdevice.which);
+                if (!controller) {
+                    SDL_Log("Failed to open gamepad ID %u: %s", (unsigned int) Event.gdevice.which, SDL_GetError());
+                }
+            }
+        }
+        else if (Event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+            if (controller && (SDL_GetGamepadID(controller) == Event.gdevice.which)) {
+                SDL_CloseGamepad(controller);  /* our joystick was unplugged. */
+                controller = NULL;
+            }
+        }
+        else if (Event.type == SDL_EVENT_QUIT)
         {
             master->quitting = true;
         }
-        if (Event.type == SDL_EVENT_KEY_DOWN)
+        else if (Event.type == SDL_EVENT_KEY_DOWN)
         {
             switch(Event.key.key)
             {
@@ -87,7 +99,7 @@ void Player::move()
                     break;
             }
         }
-        if (Event.type == SDL_EVENT_KEY_UP)
+        else if (Event.type == SDL_EVENT_KEY_UP)
         {
             switch(Event.key.key)
             {
@@ -119,9 +131,15 @@ void Player::move()
         }
     }
 
+
     float x = right - left;
     float y = down - up;
     float magnitude = std::sqrt(x*x + y*y);
+    if (controller && magnitude == 0){
+        x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTX)) / 32767.0f);
+        y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
+        magnitude = 1;
+    }
     if (pos.x >= SCREEN_X - pos.scaleX/2 && x > 0) {
         x = 0;
         pos.x = SCREEN_X - pos.scaleX/2;
@@ -145,22 +163,35 @@ void Player::move()
         pos.y += (y/magnitude) * master->deltaTime * PLAYERSPEED;
     }
 
-    if (shootUp || shootDown || shootLeft || shootRight) {
+    x = shootRight - shootLeft;
+    y = shootDown - shootUp;
+    magnitude = std::sqrt(x*x + y*y);
+    if (controller && magnitude == 0){
+        x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_RIGHTX)) / 32767.0f);
+        y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_RIGHTY)) / 32767.0f);
+        magnitude = std::sqrt(x*x + y*y);
+    }
+
+    if (magnitude > 0.4f) {
         timeTillShot -= master->deltaTime;
         if (timeTillShot > 0)
             return;
         timeTillShot += TIME_PER_BULLET;
-        float x = shootRight - shootLeft;
-        float y = shootDown - shootUp;
-        float magnitude = std::sqrt(x*x + y*y);
-        x = x / magnitude;
-        y = y / magnitude;
-        float theta = std::atan2(y, x);
-        master->shoot(pos.x + BULLET_PAIR_DIST*std::cos(theta - M_PI/2), 
-                pos.y + BULLET_PAIR_DIST*std::sin(theta - M_PI/2), x * BULLET_SPEED, y * BULLET_SPEED);
-        master->shoot(pos.x + BULLET_PAIR_DIST*std::cos(theta + M_PI/2), 
-                pos.y + BULLET_PAIR_DIST*std::sin(theta + M_PI/2), x * BULLET_SPEED, y * BULLET_SPEED);
 
+        float theta = std::atan2(y, x);
+        float dirX = std::cos(theta);
+        float dirY = std::sin(theta);
+        master->shoot(pos.x + BULLET_PAIR_DIST*dirY, pos.y - BULLET_PAIR_DIST*dirX, dirX * BULLET_SPEED, dirY * BULLET_SPEED);
+        master->shoot(pos.x - BULLET_PAIR_DIST*dirY, pos.y + BULLET_PAIR_DIST*dirX, dirX * BULLET_SPEED, dirY * BULLET_SPEED);
+        for(int i = 0; i < BULLET_SUB_STREAMS; i++){
+            float theta2 = theta + RNG::Float(-BULLET_STREAM_ANGLE_VARIANCE, BULLET_STREAM_ANGLE_VARIANCE);
+            dirX = std::cos(theta2);
+            dirY = std::sin(theta2);
+            float speed = BULLET_SPEED + RNG::Float(-BULLET_STREAM_SPEED_VARIANCE, BULLET_STREAM_SPEED_VARIANCE);
+            master->shoot(pos.x, pos.y, dirX * speed, dirY * speed);
+        }
+
+        SDL_RumbleGamepad(controller, 65535 * BULLET_SHAKE, 65535 * BULLET_SHAKE, BULLET_SHAKE_MS);
     }
 }
 
@@ -169,5 +200,6 @@ void Player::kill() {
     dead = true;
     pos.x = 1000000;
     pos.y = 0;
+    SDL_RumbleGamepad(controller, 65535 * DEATH_SHAKE, 65535 * DEATH_SHAKE, DEATH_SHAKE_MS);
 }
 

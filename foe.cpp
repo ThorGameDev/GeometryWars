@@ -17,7 +17,7 @@ void bump(transform* pos, float* speedX, float* speedY){
         *speedX = -*speedX;
         pos->x = pos->scaleX/2;
     }
-    if (pos->y > SCREEN_Y - pos->scaleY/2) {
+    else if (pos->y > SCREEN_Y - pos->scaleY/2) {
         *speedY = -*speedY;
         pos->y = SCREEN_Y - pos->scaleY/2;
     }
@@ -28,7 +28,7 @@ void bump(transform* pos, float* speedX, float* speedY){
 }
 
 pinwheel::pinwheel(transform pos, Game* master) : foe(pos, 1, master) {
-    this->pos.theta = 0;
+    this->pos.theta = RNG::Float(0, 360);
     this->pos.scaleX = PINWHEEL_SCALE;
     this->pos.scaleY = PINWHEEL_SCALE;
     float angle = RNG::Float(0, 360); 
@@ -37,7 +37,7 @@ pinwheel::pinwheel(transform pos, Game* master) : foe(pos, 1, master) {
 }
 
 void pinwheel::move() {
-    pos.theta += 360 * master->deltaTime;
+    pos.theta += PINWHEEL_ROTATION_SPEED * master->deltaTime;
     if (pos.theta > 360)
         pos.theta -= 360;
     pos.x += speedX * master->deltaTime;
@@ -53,11 +53,11 @@ diamond::diamond(transform pos, Game* master) : foe(pos, 2, master) {
     this->pos.theta = 0;
     this->pos.scaleX = DIAMOND_SCALE;
     this->pos.scaleY = DIAMOND_SCALE;
-    speedX = master->getPlayerPos().x - pos.x;
-    speedY = master->getPlayerPos().y - pos.y;
-    float magnitude = std::sqrt(speedX*speedX + speedY*speedY);
-    speedX = speedX / magnitude * DIAMOND_SPEED;
-    speedY = speedY / magnitude * DIAMOND_SPEED;
+    float dirX = master->getPlayerPos().x - pos.x;
+    float dirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(dirX*dirX + dirY*dirY);
+    speedX = dirX / magnitude * DIAMOND_SPEED;
+    speedY = dirY / magnitude * DIAMOND_SPEED;
     birthday = master->playtime - RNG::Float(0, DIAMOND_SQUISH_SPEED * M_PI);
 }
 
@@ -87,11 +87,11 @@ bubble::bubble(transform pos, Game* master) : foe(pos, 3, master) {
     this->pos.theta = 0;
     this->pos.scaleX = BUBBLE_SCALE;
     this->pos.scaleY = BUBBLE_SCALE;
-    speedX = master->getPlayerPos().x - pos.x;
-    speedY = master->getPlayerPos().y - pos.y;
-    float magnitude = std::sqrt(speedX*speedX + speedY*speedY);
-    speedX = speedX / magnitude * BUBBLE_SPEED;
-    speedY = speedY / magnitude * BUBBLE_SPEED;
+    float dirX = master->getPlayerPos().x - pos.x;
+    float dirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(dirX*dirX + dirY*dirY);
+    speedX = dirX / magnitude * BUBBLE_SPEED;
+    speedY = dirY / magnitude * BUBBLE_SPEED;
 }
 
 void bubble::move() {
@@ -116,11 +116,11 @@ splitSquare::splitSquare(transform pos, Game* master) : foe(pos, 4, master) {
     this->pos.theta = 0;
     this->pos.scaleX = SPLIT_SQUARE_SCALE;
     this->pos.scaleY = SPLIT_SQUARE_SCALE;
-    speedX = master->getPlayerPos().x - pos.x;
-    speedY = master->getPlayerPos().y - pos.y;
-    float magnitude = std::sqrt(speedX*speedX + speedY*speedY);
-    speedX = speedX / magnitude * SPLIT_SQUARE_SPEED;
-    speedY = speedY / magnitude * SPLIT_SQUARE_SPEED;
+    float dirX = master->getPlayerPos().x - pos.x;
+    float dirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(dirX*dirX + dirY*dirY);
+    speedX = dirX / magnitude * SPLIT_SQUARE_SPEED;
+    speedY = dirY / magnitude * SPLIT_SQUARE_SPEED;
 }
 
 void splitSquare::move() {
@@ -171,5 +171,67 @@ void subSquare::move() {
 }
 
 void subSquare::death(bool byClearing) {
+    return;
+}
+
+greenSquare::greenSquare(transform pos, Game* master) : foe(pos, 6, master) {
+    this->pos.theta = RNG::Float(0, 360);
+    this->pos.scaleX = GREEN_SQUARE_SCALE;
+    this->pos.scaleY = GREEN_SQUARE_SCALE;
+    float dirX = master->getPlayerPos().x - pos.x;
+    float dirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(dirX*dirX + dirY*dirY);
+    speedX = dirX / magnitude * GREEN_SQUARE_SPEED;
+    speedY = dirY / magnitude * GREEN_SQUARE_SPEED;
+}
+
+void greenSquare::chase() {
+    pos.theta += GREEN_SQUARE_ROTATION_SPEED * master->deltaTime;
+    if (pos.theta > 360)
+        pos.theta -= 360;
+    float redirX = master->getPlayerPos().x - pos.x;
+    float redirY = master->getPlayerPos().y - pos.y;
+    float magnitude = std::sqrt(redirX*redirX + redirY*redirY);
+    redirX = speedX + redirX / magnitude * master->greenSquareDeltaSpeedConv;
+    redirY = speedY + redirY / magnitude * master->greenSquareDeltaSpeedConv;
+    magnitude = std::sqrt(redirX*redirX + redirY*redirY);
+    speedX = redirX / magnitude * GREEN_SQUARE_SPEED;
+    speedY = redirY / magnitude * GREEN_SQUARE_SPEED;
+}
+
+void greenSquare::dodge(bullet* bt) {
+    pos.theta += GREEN_SQUARE_PANIC_ROTATION_SPEED * master->deltaTime;
+    if (pos.theta > 360)
+        pos.theta -= 360;
+    float bulletX = bt->speedX / BULLET_SPEED;
+    float bulletY = bt->speedY / BULLET_SPEED;
+
+    float dirX = pos.x - bt->x;
+    float dirY = pos.y - bt->y;
+
+    float dodgeDist1 = dirX * bulletY - dirY * bulletX;
+    float dodgeDist2 = - dirX * bulletY + dirY * bulletX;
+    if (dodgeDist1 > dodgeDist2){
+        speedX = bulletY * GREEN_SQUARE_PANIC_SPEED;
+        speedY = -bulletX * GREEN_SQUARE_PANIC_SPEED;
+    }
+    else {
+        speedX = -bulletY * GREEN_SQUARE_PANIC_SPEED;
+        speedY = bulletX * GREEN_SQUARE_PANIC_SPEED;
+    }
+}
+
+void greenSquare::move() {
+    bullet* closest = master->getNearestBullet(pos.x, pos.y, GREEN_SQUARE_PANIC_SQDISTANCE);
+    if (closest == NULL)
+        chase();
+    else
+        dodge(closest);
+    pos.x += speedX * master->deltaTime;
+    pos.y += speedY * master->deltaTime;
+    bump(&pos, &speedX, &speedY);
+}
+
+void greenSquare::death(bool byClearing) {
     return;
 }

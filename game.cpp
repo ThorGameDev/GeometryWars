@@ -90,8 +90,10 @@ void Game::spawn()
             things.push_back(new pinwheel(pos, this));
         else if (idx <= 75)
             things.push_back(new diamond(pos, this));
-        else if (idx <= 98)
+        else if (idx <= 94)
             things.push_back(new splitSquare(pos, this));
+        else if (idx <= 98)
+            things.push_back(new greenSquare(pos, this));
         else if (idx <= 100)
             things.push_back(new bubble(pos, this));
     }
@@ -113,6 +115,20 @@ void Game::shoot(float posX, float posY, float speedX, float speedY)
     projectile->speedX = speedX;
     projectile->speedY = speedY;
     bullets.push_back(projectile);
+}
+
+bullet* Game::getNearestBullet(float posX, float posY, float radiusSq){
+    bullet* closest = NULL;
+    for (int i = 0; i < bullets.size(); i++) {
+        float x = bullets[i]->x - posX;
+        float y = bullets[i]->y - posY;
+        float dist = x*x + y*y;
+        if (dist < radiusSq){
+            radiusSq = dist;
+            closest = bullets[i];
+        }
+    }
+    return closest;
 }
 
 void Game::manageWaves()
@@ -224,6 +240,7 @@ void Game::loopItteration()
     bubbleDeltaSpeedConv = deltaTime * BUBBLE_SPEED * BUBBLE_CONVERGANCE;
     splitSquareDeltaSpeedConv = deltaTime * SPLIT_SQUARE_SPEED * SPLIT_SQUARE_CONVERGANCE;
     subSquareDeltaSpeedConv = deltaTime * SUB_SQUARE_SPEED * SUB_SQUARE_CONVERGANCE;
+    greenSquareDeltaSpeedConv = deltaTime * GREEN_SQUARE_SPEED * GREEN_SQUARE_CONVERGANCE;
 
     if (!lost)
         manageWaves();
@@ -231,7 +248,7 @@ void Game::loopItteration()
     collision();
     if(player->isDead())
     {
-        for (int i = things.size() - 1; i > 0; i--){
+        for (int i = things.size() - 1; i >= 0; i--){
             destroy(i, true);
         }
         audio.pauseSong();

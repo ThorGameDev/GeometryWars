@@ -64,4 +64,15 @@ public:
     void move() override;
     void death(bool byClearing) override;
 };
+
+class greenSquare : public foe {
+    float speedX;
+    float speedY;
+    void chase();
+    void dodge(bullet* bullet);
+public:
+    greenSquare(transform pos, Game* master);
+    void move() override;
+    void death(bool byClearing) override;
+};
 #endif

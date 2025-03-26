@@ -12,6 +12,8 @@ class Player {
     bool dead;
     Game* master;
     float timeTillShot;
+    SDL_Gamepad* controller;
+
 public:
     Player(Game* master);
     ~Player();

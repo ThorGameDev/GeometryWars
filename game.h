@@ -21,6 +21,7 @@ class Game
         bool lost = false;
         float deltaTime;
         transform getPlayerPos();
+        bullet* getNearestBullet(float posX, float posY, float radiusSq);
         void shoot(float posX, float posY, float speedX, float speedY);
         void instantiate(foe* creation);
         
@@ -31,6 +32,7 @@ class Game
         float bubbleDeltaSpeedConv;
         float splitSquareDeltaSpeedConv;
         float subSquareDeltaSpeedConv;
+        float greenSquareDeltaSpeedConv;
 
         // Diagnostics
         float fpsSum;
