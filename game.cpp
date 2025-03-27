@@ -18,6 +18,7 @@
 #include <iostream>
 #include <deque>
 #include <ostream>
+#include <thread>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -26,7 +27,7 @@
 void Game::newGame()
 {
     intensity = 1;
-    timeTillWave = TIMEPERWAVE;
+    timeTillWave = TIME_PER_WAVE;
     lost = false;
     lostTime = 0;
     audio.playSong();
@@ -37,6 +38,7 @@ void Game::newGame()
 Game::Game()
 {
     player = new Player(this);
+    drawer = new ScreenDrawer(this);
     newGame();
     if (MAXIMUM_INITIAL_INTENSITY) {
         intensity = MAX_FOES;
@@ -48,6 +50,7 @@ Game::Game()
 Game::~Game()
 {
     delete player;
+    delete drawer;
     SDL_Quit();
     std::cout << "Game has been destroyed" << std::endl;
 }
@@ -58,17 +61,30 @@ transform Game::getPlayerPos(){
 
 void Game::requestRender()
 {
+    for (int x = 0; x < GRID_SIZE_X; x++){
+        for (int y = 0; y < GRID_SIZE_Y; y++){
+            transform gridthing;
+            gridthing.x = x*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
+            gridthing.y = y*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
+            gridthing.scaleX = GRID_UNIT_SCALE;
+            gridthing.scaleY = GRID_UNIT_SCALE;
+            gridthing.theta = 0;
+            int tileID = (y != 0) | (2 * (x != 0)) | (4 * (x != GRID_SIZE_X - 1)) | (8 * (y != GRID_SIZE_Y - 1));
+            int spt = drawer->getGridOffset() + tileID;
+            drawer->drawSprite(gridthing, spt);
+        }
+    }
     for (int i = 0; i < things.size(); i++)
     {
-        drawer.drawSprite(things[i]->getPos(), things[i]->getSpriteID());
+        drawer->drawSprite(things[i]->getPos(), things[i]->getSpriteID());
     }
     for (int i = 0; i < bullets.size(); i++) 
     {
-        drawer.drawSquare(bullets[i]->x, bullets[i]->y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
+        drawer->drawSquare(bullets[i]->x, bullets[i]->y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
     }
-    drawer.drawSprite(player->getPos(), 0);
+    drawer->drawSprite(player->getPos(), 0);
     
-    drawer.frame();
+    drawer->frame();
 }
 
 void Game::spawn()
@@ -81,8 +97,8 @@ void Game::spawn()
     {
         transform pos;
         do {
-            pos.x = RNG::Float(0, SCREEN_X);
-            pos.y = RNG::Float(0, SCREEN_Y);
+            pos.x = RNG::Float(0, GRID_SIZE_X*GRID_UNIT_SCALE);
+            pos.y = RNG::Float(0, GRID_SIZE_Y*GRID_UNIT_SCALE);
         } while (std::sqrt(std::pow(pos.x - player->getPos().x, 2) + std::pow(pos.y - player->getPos().y, 2)) < MIN_DIST_FROM_PLAYER);
 
         int idx = RNG::Int(0, 100);
@@ -136,7 +152,7 @@ void Game::manageWaves()
     timeTillWave -= deltaTime;
     if (timeTillWave <= 0)
     {
-        timeTillWave += TIMEPERWAVE;
+        timeTillWave += TIME_PER_WAVE;
         //int choice = randomRange(0, 2);
         spawn();
 
@@ -163,10 +179,10 @@ void Game::destroy(foe* victim, bool byClearing)
 void Game::collision()
 {
     int topX, topY, bottomX, bottomY;
-    topX = player->getPos().x + ((float)HIDDENPLAYERSCALE/2);
-    topY = player->getPos().y + ((float)HIDDENPLAYERSCALE/2);
-    bottomX = player->getPos().x - ((float)HIDDENPLAYERSCALE/2);
-    bottomY = player->getPos().y - ((float)HIDDENPLAYERSCALE/2);
+    topX = player->getPos().x + ((float)HIDDEN_PLAYER_SCALE/2);
+    topY = player->getPos().y + ((float)HIDDEN_PLAYER_SCALE/2);
+    bottomX = player->getPos().x - ((float)HIDDEN_PLAYER_SCALE/2);
+    bottomY = player->getPos().y - ((float)HIDDEN_PLAYER_SCALE/2);
 
     for(int i = things.size() - 1; i >= 0; i--)
     {
@@ -207,8 +223,8 @@ void Game::moveObjects()
     for(int i = bullets.size() - 1; i >= 0; i--) {
         bullets[i]->x += bullets[i]->speedX * deltaTime;
         bullets[i]->y += bullets[i]->speedY * deltaTime;
-        if (bullets[i]->x > SCREEN_X - BULLET_SIZE/2 || bullets[i]->x <= BULLET_SIZE/2 ||
-            bullets[i]->y > SCREEN_Y - BULLET_SIZE/2 || bullets[i]->y <= BULLET_SIZE/2) {
+        if (bullets[i]->x > GRID_SIZE_X*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->x <= BULLET_SIZE/2 ||
+            bullets[i]->y > GRID_SIZE_Y*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->y <= BULLET_SIZE/2) {
             bullet* bt = bullets[i];
             bullets.erase(bullets.begin() + i);
             delete bt;
@@ -279,6 +295,8 @@ int main(int argc, char* argv[])
 #else
     while(!game.quitting)
     {
+        if (LAG_MS > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(LAG_MS));
         game.loopItteration();
     }
 #endif

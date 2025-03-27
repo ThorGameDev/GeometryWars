@@ -9,17 +9,17 @@
 
 
 void bump(transform* pos, float* speedX, float* speedY){
-    if (pos->x > SCREEN_X - pos->scaleX/2) {
+    if (pos->x > GRID_SIZE_X*GRID_UNIT_SCALE - pos->scaleX/2) {
         *speedX = -*speedX;
-        pos->x = SCREEN_X - pos->scaleX/2;
+        pos->x = GRID_SIZE_X*GRID_UNIT_SCALE - pos->scaleX/2;
     }
     else if (pos->x < pos->scaleX/2) {
         *speedX = -*speedX;
         pos->x = pos->scaleX/2;
     }
-    else if (pos->y > SCREEN_Y - pos->scaleY/2) {
+    else if (pos->y > GRID_SIZE_Y*GRID_UNIT_SCALE - pos->scaleY/2) {
         *speedY = -*speedY;
-        pos->y = SCREEN_Y - pos->scaleY/2;
+        pos->y = GRID_SIZE_Y*GRID_UNIT_SCALE - pos->scaleY/2;
     }
     else if (pos->y < pos->scaleY/2) {
         *speedY = -*speedY;

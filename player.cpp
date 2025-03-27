@@ -12,11 +12,11 @@
 #include <ostream>
 
 void Player::init() {
-    pos.x = SCREEN_X / 2;
-    pos.y = SCREEN_Y / 2;
+    pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) / 2;
+    pos.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) / 2;
     pos.theta = 0;
-    pos.scaleX = PLAYERSCALE;
-    pos.scaleY = PLAYERSCALE;
+    pos.scaleX = PLAYER_SCALE;
+    pos.scaleY = PLAYER_SCALE;
     timeTillShot = 0;
     dead = false;
 }
@@ -140,17 +140,17 @@ void Player::move()
         y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
         magnitude = 1;
     }
-    if (pos.x >= SCREEN_X - pos.scaleX/2 && x > 0) {
+    if (pos.x >= (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scaleX/2 && x > 0) {
         x = 0;
-        pos.x = SCREEN_X - pos.scaleX/2;
+        pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scaleX/2;
     }
     if (pos.x <= pos.scaleX/2 && x < 0) {
         x = 0;
         pos.x = pos.scaleX/2;
     }
-    if (pos.y >= SCREEN_Y - pos.scaleY/2 && y > 0) {
+    if (pos.y >= (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scaleY/2 && y > 0) {
         y = 0;
-        pos.y = SCREEN_Y - pos.scaleY/2;
+        pos.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scaleY/2;
     }
     if (pos.y <= pos.scaleY/2 && y < 0) {
         y = 0;
@@ -159,8 +159,8 @@ void Player::move()
 
     if(magnitude >= 0.2)
     {
-        pos.x += (x/magnitude) * master->deltaTime * PLAYERSPEED;
-        pos.y += (y/magnitude) * master->deltaTime * PLAYERSPEED;
+        pos.x += (x/magnitude) * master->deltaTime * PLAYER_SPEED;
+        pos.y += (y/magnitude) * master->deltaTime * PLAYER_SPEED;
     }
 
     x = shootRight - shootLeft;

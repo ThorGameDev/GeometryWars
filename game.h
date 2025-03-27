@@ -62,7 +62,7 @@ class Game
         float lostTime;
 
         //Wave Manager
-        float timeTillWave = TIMEPERWAVE;
+        float timeTillWave = TIME_PER_WAVE;
         int currentWaveID = 0;
         int intensity;
         
@@ -73,7 +73,7 @@ class Game
         AudioPlayer audio;
         
         //Images
-        ScreenDrawer drawer;
+        ScreenDrawer* drawer;
 };
 
 #endif

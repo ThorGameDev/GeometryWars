@@ -41,9 +41,9 @@ const int MAX_FOES = 1000;
 const int MIN_DIST_FROM_PLAYER = 300;
 
 //Player
-const int PLAYERSCALE = 40;
-const int HIDDENPLAYERSCALE = 20;
-const int PLAYERSPEED = 250;
+const int PLAYER_SCALE = 40;
+const int HIDDEN_PLAYER_SCALE = 20;
+const int PLAYER_SPEED = 250;
 
 const float TIME_PER_BULLET = 0.08;
 const float BULLET_SPEED = 900;
@@ -55,7 +55,7 @@ const float BULLET_STREAM_ANGLE_VARIANCE = 0.1;
 const float BULLET_STREAM_SPEED_VARIANCE = 50;
 
 //Wave Management
-const int TIMEPERWAVE = 2;
+const int TIME_PER_WAVE = 2;
 
 //Effects
 const float BULLET_SHAKE = 0.3;
@@ -64,10 +64,16 @@ const int BULLET_SHAKE_MS = 40;
 const float DEATH_SHAKE = 1;
 const int DEATH_SHAKE_MS = 200;
 
+//Grid
+const int GRID_SIZE_X = 30;
+const int GRID_SIZE_Y = 20;
+const int GRID_UNIT_SCALE = 32;
+
 //Testing
 const bool MUSIC = false;
 const bool PLAYER_IMORTAL = false;
 const bool SHOW_FPS = false;
 const bool MAXIMUM_INITIAL_INTENSITY = false;
+const int LAG_MS = 0;
 
 #endif

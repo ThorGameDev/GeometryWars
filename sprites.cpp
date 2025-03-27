@@ -1,6 +1,7 @@
 #include "CONST.h"
 #include "utils.h"
 #include "sprites.h"
+#include "game.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
@@ -31,7 +32,7 @@ static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
     return sprite;
 }
 
-ScreenDrawer::ScreenDrawer() {
+ScreenDrawer::ScreenDrawer(Game* master) {
     SDL_Init(SDL_INIT_VIDEO );
     if (!SDL_CreateWindowAndRenderer("RescizableRectangles", SCREEN_X, SCREEN_Y, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
@@ -46,7 +47,15 @@ ScreenDrawer::ScreenDrawer() {
     sprites.push_back(LoadSprite("resources/splitSquare.png", renderer));
     sprites.push_back(LoadSprite("resources/subSquare.png", renderer));
     sprites.push_back(LoadSprite("resources/greenSquare.png", renderer));
+    gridOffset = sprites.size();
+    for(int i = 0; i <= 15; i++){
+        char str[26];
+        sprintf(str, "resources/tileset/%i.png", i);
+        sprites.push_back(LoadSprite(str, renderer));
+    }
     std::cout << "ScreenDrawer has been created" << std::endl;
+
+    cam.master = master;
 }
 
 ScreenDrawer::~ScreenDrawer() {
@@ -63,12 +72,16 @@ ScreenDrawer::~ScreenDrawer() {
 }
 
 void ScreenDrawer::drawSquare(float x, float y, float scaleX, float scaleY, int r, int g, int b) {
+    x -= cam.master->getPlayerPos().x - SCREEN_X/2;
+    y -= cam.master->getPlayerPos().y - SCREEN_Y/2;
     SDL_SetRenderDrawColor(renderer, r,  g, b, 255);
     SDL_FRect rect = {x - scaleX/2, y - scaleY/2, scaleX, scaleY};
     SDL_RenderFillRect(renderer, &rect);
 }
 
 void ScreenDrawer::drawSprite(transform pos, int index) {
+    pos.x -= cam.master->getPlayerPos().x - SCREEN_X/2;
+    pos.y -= cam.master->getPlayerPos().y - SCREEN_Y/2;
     SDL_FRect rect = {pos.x - pos.scaleX/2, pos.y - pos.scaleY/2, pos.scaleX, pos.scaleY};
     SDL_RenderTextureRotated(renderer, sprites[index]->texture, NULL, &rect, pos.theta, NULL, SDL_FLIP_NONE);
 }
