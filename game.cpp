@@ -32,6 +32,7 @@ void Game::newGame()
     lostTime = 0;
     audio.playSong();
     player->init();
+    drawer->init();
     lastMeasure = std::chrono::steady_clock::now();
 }
 

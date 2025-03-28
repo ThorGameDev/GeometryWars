@@ -1,9 +1,10 @@
 #ifndef CONSTANT_DEFINITIONS
 #define CONSTANT_DEFINITIONS
 
-//Screen
+//Camera
 const int SCREEN_X = 980;
 const int SCREEN_Y = 640;
+const float CAMERA_INTERP_SPEED = 3;
 
 //foes
 const int PINWHEEL_SCALE = 30;
@@ -44,6 +45,7 @@ const int MIN_DIST_FROM_PLAYER = 300;
 const int PLAYER_SCALE = 40;
 const int HIDDEN_PLAYER_SCALE = 20;
 const int PLAYER_SPEED = 250;
+const int PLAYER_ROTATE_SPEED = 4;
 
 const float TIME_PER_BULLET = 0.08;
 const float BULLET_SPEED = 900;

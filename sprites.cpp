@@ -32,6 +32,11 @@ static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
     return sprite;
 }
 
+void ScreenDrawer::init() {
+    cam.x = (GRID_SIZE_X*GRID_UNIT_SCALE) / 2;
+    cam.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) / 2;
+}
+
 ScreenDrawer::ScreenDrawer(Game* master) {
     SDL_Init(SDL_INIT_VIDEO );
     if (!SDL_CreateWindowAndRenderer("RescizableRectangles", SCREEN_X, SCREEN_Y, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
@@ -56,6 +61,7 @@ ScreenDrawer::ScreenDrawer(Game* master) {
     std::cout << "ScreenDrawer has been created" << std::endl;
 
     cam.master = master;
+    init();
 }
 
 ScreenDrawer::~ScreenDrawer() {
@@ -72,21 +78,23 @@ ScreenDrawer::~ScreenDrawer() {
 }
 
 void ScreenDrawer::drawSquare(float x, float y, float scaleX, float scaleY, int r, int g, int b) {
-    x -= cam.master->getPlayerPos().x - SCREEN_X/2;
-    y -= cam.master->getPlayerPos().y - SCREEN_Y/2;
+    x -= cam.x - SCREEN_X/2;
+    y -= cam.y - SCREEN_Y/2;
     SDL_SetRenderDrawColor(renderer, r,  g, b, 255);
     SDL_FRect rect = {x - scaleX/2, y - scaleY/2, scaleX, scaleY};
     SDL_RenderFillRect(renderer, &rect);
 }
 
 void ScreenDrawer::drawSprite(transform pos, int index) {
-    pos.x -= cam.master->getPlayerPos().x - SCREEN_X/2;
-    pos.y -= cam.master->getPlayerPos().y - SCREEN_Y/2;
+    pos.x -= cam.x - SCREEN_X/2;
+    pos.y -= cam.y - SCREEN_Y/2;
     SDL_FRect rect = {pos.x - pos.scaleX/2, pos.y - pos.scaleY/2, pos.scaleX, pos.scaleY};
     SDL_RenderTextureRotated(renderer, sprites[index]->texture, NULL, &rect, pos.theta, NULL, SDL_FLIP_NONE);
 }
 
 void ScreenDrawer::frame() {
+    cam.x = cam.x + (cam.master->getPlayerPos().x - cam.x) * CAMERA_INTERP_SPEED * cam.master->deltaTime;
+    cam.y = cam.y + (cam.master->getPlayerPos().y - cam.y) * CAMERA_INTERP_SPEED * cam.master->deltaTime;
     SDL_UpdateWindowSurface(window);
     SDL_RenderPresent(renderer);
     

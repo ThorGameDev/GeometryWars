@@ -26,6 +26,7 @@ public:
     void drawSquare(float x, float y, float scaleX, float scaleY, int r, int g, int b);
     void drawSprite(transform pos, int index);
     void frame();
+    void init();
     int getGridOffset() { return gridOffset; };
 };
 

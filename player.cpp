@@ -17,6 +17,7 @@ void Player::init() {
     pos.theta = 0;
     pos.scaleX = PLAYER_SCALE;
     pos.scaleY = PLAYER_SCALE;
+    targetRotation = 0;
     timeTillShot = 0;
     dead = false;
 }
@@ -138,7 +139,9 @@ void Player::move()
     if (controller && magnitude == 0){
         x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTX)) / 32767.0f);
         y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
-        magnitude = 1;
+        magnitude = std::sqrt(x*x + y*y);
+        if (magnitude >= 0.2)
+            magnitude = 1;
     }
     if (pos.x >= (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scaleX/2 && x > 0) {
         x = 0;
@@ -161,7 +164,20 @@ void Player::move()
     {
         pos.x += (x/magnitude) * master->deltaTime * PLAYER_SPEED;
         pos.y += (y/magnitude) * master->deltaTime * PLAYER_SPEED;
+        targetRotation = std::atan2(y, x)/M_PI * 180 + 90; // No clue why the +90
     }
+
+    if(targetRotation - pos.theta > 180)
+        pos.theta = pos.theta + (targetRotation-360 - pos.theta) * PLAYER_ROTATE_SPEED * master->deltaTime;
+    else if(targetRotation - pos.theta < -180)
+        pos.theta = pos.theta + (targetRotation+360 - pos.theta) * PLAYER_ROTATE_SPEED * master->deltaTime;
+    else
+        pos.theta = pos.theta + (targetRotation - pos.theta) * PLAYER_ROTATE_SPEED * master->deltaTime;
+
+    if (pos.theta > 360)
+        pos.theta -= 360;
+    if (pos.theta < 0)
+        pos.theta += 360;
 
     x = shootRight - shootLeft;
     y = shootDown - shootUp;

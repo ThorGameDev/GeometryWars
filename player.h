@@ -13,7 +13,7 @@ class Player {
     Game* master;
     float timeTillShot;
     SDL_Gamepad* controller;
-
+    float targetRotation;
 public:
     Player(Game* master);
     ~Player();
