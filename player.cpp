@@ -12,11 +12,9 @@
 #include <ostream>
 
 void Player::init() {
-    pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) / 2;
-    pos.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) / 2;
+    pos.pos = Vector2(GRID_SIZE_X, GRID_SIZE_Y) * GRID_UNIT_SCALE / 2;
     pos.theta = 0;
-    pos.scaleX = PLAYER_SCALE;
-    pos.scaleY = PLAYER_SCALE;
+    pos.scale = PLAYER_SCALE;
     targetRotation = 0;
     timeTillShot = 0;
     dead = false;
@@ -133,38 +131,35 @@ void Player::move()
     }
 
 
-    float x = right - left;
-    float y = down - up;
-    float magnitude = std::sqrt(x*x + y*y);
-    if (controller && magnitude == 0){
-        x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTX)) / 32767.0f);
-        y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
-        magnitude = std::sqrt(x*x + y*y);
-        if (magnitude >= 0.2)
-            magnitude = 1;
+    Vector2 dir = Vector2(right - left, down - up);
+
+    /*
+    if (controller && dir.magnitude() == 0){
+        dir.x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTX)) / 32767.0f);
+        dir.y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
     }
-    if (pos.x >= (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scaleX/2 && x > 0) {
-        x = 0;
-        pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scaleX/2;
+    */
+    if (pos.pos.x >= (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scale.x/2 && dir.x > 0) {
+        dir.x = 0;
+        pos.pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scale.x/2;
     }
-    if (pos.x <= pos.scaleX/2 && x < 0) {
-        x = 0;
-        pos.x = pos.scaleX/2;
+    if (pos.pos.x <= pos.scale.x/2 && dir.x < 0) {
+        dir.x = 0;
+        pos.pos.x = pos.scale.x/2;
     }
-    if (pos.y >= (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scaleY/2 && y > 0) {
-        y = 0;
-        pos.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scaleY/2;
+    if (pos.pos.y >= (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scale.y/2 && dir.y > 0) {
+        dir.y = 0;
+        pos.pos.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scale.y/2;
     }
-    if (pos.y <= pos.scaleY/2 && y < 0) {
-        y = 0;
-        pos.y = pos.scaleY/2;
+    if (pos.pos.y <= pos.scale.y/2 && dir.y < 0) {
+        dir.y = 0;
+        pos.pos.y = pos.scale.y/2;
     }
 
-    if(magnitude >= 0.2)
+    if(dir.magnitude() >= 0.2)
     {
-        pos.x += (x/magnitude) * master->deltaTime * PLAYER_SPEED;
-        pos.y += (y/magnitude) * master->deltaTime * PLAYER_SPEED;
-        targetRotation = std::atan2(y, x)/M_PI * 180 + 90; // No clue why the +90
+        pos.pos += dir.normalized() * master->deltaTime * PLAYER_SPEED;
+        targetRotation = std::atan2(dir.y, dir.x)/M_PI * 180 + 90; // No clue why the +90
     }
 
     if(targetRotation - pos.theta > 180)
@@ -179,32 +174,27 @@ void Player::move()
     if (pos.theta < 0)
         pos.theta += 360;
 
-    x = shootRight - shootLeft;
-    y = shootDown - shootUp;
-    magnitude = std::sqrt(x*x + y*y);
-    if (controller && magnitude == 0){
-        x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_RIGHTX)) / 32767.0f);
-        y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_RIGHTY)) / 32767.0f);
-        magnitude = std::sqrt(x*x + y*y);
+    Vector2 shootdir = Vector2(shootRight - shootLeft, shootDown - shootUp);
+    if (controller && shootdir.magnitude() == 0){
+        shootdir.x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_RIGHTX)) / 32767.0f);
+        shootdir.y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_RIGHTY)) / 32767.0f);
     }
 
-    if (magnitude > 0.4f) {
+    if (shootdir.magnitude() > 0.4f) {
         timeTillShot -= master->deltaTime;
         if (timeTillShot > 0)
             return;
         timeTillShot += TIME_PER_BULLET;
 
-        float theta = std::atan2(y, x);
-        float dirX = std::cos(theta);
-        float dirY = std::sin(theta);
-        master->shoot(pos.x + BULLET_PAIR_DIST*dirY, pos.y - BULLET_PAIR_DIST*dirX, dirX * BULLET_SPEED, dirY * BULLET_SPEED);
-        master->shoot(pos.x - BULLET_PAIR_DIST*dirY, pos.y + BULLET_PAIR_DIST*dirX, dirX * BULLET_SPEED, dirY * BULLET_SPEED);
+        float theta = std::atan2(shootdir.y, shootdir.x);
+        Vector2 dir = Vector2(std::cos(theta), std::sin(theta));
+        master->shoot(pos.pos + dir.perp(false)*BULLET_PAIR_DIST, dir * BULLET_SPEED);
+        master->shoot(pos.pos + dir.perp(true)*BULLET_PAIR_DIST, dir * BULLET_SPEED);
         for(int i = 0; i < BULLET_SUB_STREAMS; i++){
             float theta2 = theta + RNG::Float(-BULLET_STREAM_ANGLE_VARIANCE, BULLET_STREAM_ANGLE_VARIANCE);
-            dirX = std::cos(theta2);
-            dirY = std::sin(theta2);
+            dir = Vector2(std::cos(theta2), std::sin(theta2));
             float speed = BULLET_SPEED + RNG::Float(-BULLET_STREAM_SPEED_VARIANCE, BULLET_STREAM_SPEED_VARIANCE);
-            master->shoot(pos.x, pos.y, dirX * speed, dirY * speed);
+            master->shoot(pos.pos, dir * speed);
         }
 
         SDL_RumbleGamepad(controller, 65535 * BULLET_SHAKE, 65535 * BULLET_SHAKE, BULLET_SHAKE_MS);
@@ -214,8 +204,7 @@ void Player::move()
 void Player::kill() {
     if (PLAYER_IMORTAL) return;
     dead = true;
-    pos.x = 1000000;
-    pos.y = 0;
+    pos.pos = 1000000;
     SDL_RumbleGamepad(controller, 65535 * DEATH_SHAKE, 65535 * DEATH_SHAKE, DEATH_SHAKE_MS);
 }
 

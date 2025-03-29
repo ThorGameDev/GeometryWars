@@ -65,10 +65,8 @@ void Game::requestRender()
     for (int x = 0; x < GRID_SIZE_X; x++){
         for (int y = 0; y < GRID_SIZE_Y; y++){
             transform gridthing;
-            gridthing.x = x*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
-            gridthing.y = y*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
-            gridthing.scaleX = GRID_UNIT_SCALE;
-            gridthing.scaleY = GRID_UNIT_SCALE;
+            gridthing.pos = Vector2(x, y)*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
+            gridthing.scale = GRID_UNIT_SCALE;
             gridthing.theta = 0;
             int tileID = (y != 0) | (2 * (x != 0)) | (4 * (x != GRID_SIZE_X - 1)) | (8 * (y != GRID_SIZE_Y - 1));
             int spt = drawer->getGridOffset() + tileID;
@@ -81,7 +79,7 @@ void Game::requestRender()
     }
     for (int i = 0; i < bullets.size(); i++) 
     {
-        drawer->drawSquare(bullets[i]->x, bullets[i]->y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
+        drawer->drawSquare(bullets[i]->pos.x, bullets[i]->pos.y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
     }
     drawer->drawSprite(player->getPos(), 0);
     
@@ -98,9 +96,9 @@ void Game::spawn()
     {
         transform pos;
         do {
-            pos.x = RNG::Float(0, GRID_SIZE_X*GRID_UNIT_SCALE);
-            pos.y = RNG::Float(0, GRID_SIZE_Y*GRID_UNIT_SCALE);
-        } while (std::sqrt(std::pow(pos.x - player->getPos().x, 2) + std::pow(pos.y - player->getPos().y, 2)) < MIN_DIST_FROM_PLAYER);
+            pos.pos.x = RNG::Float(0, GRID_SIZE_X*GRID_UNIT_SCALE);
+            pos.pos.y = RNG::Float(0, GRID_SIZE_Y*GRID_UNIT_SCALE);
+        } while (std::sqrt(std::pow(pos.pos.x - player->getPos().pos.x, 2) + std::pow(pos.pos.y - player->getPos().pos.y, 2)) < MIN_DIST_FROM_PLAYER);
 
         int idx = RNG::Int(0, 100);
         if (idx <= 50)
@@ -124,22 +122,18 @@ void Game::instantiate(foe* creation)
         destroy(creation);
 }
 
-void Game::shoot(float posX, float posY, float speedX, float speedY)
+void Game::shoot(Vector2 pos, Vector2 speed)
 {
     bullet* projectile = new bullet();
-    projectile->x = posX;
-    projectile->y = posY;
-    projectile->speedX = speedX;
-    projectile->speedY = speedY;
+    projectile->pos = pos;
+    projectile->speed = speed;
     bullets.push_back(projectile);
 }
 
-bullet* Game::getNearestBullet(float posX, float posY, float radiusSq){
+bullet* Game::getNearestBullet(Vector2 pos, float radiusSq){
     bullet* closest = NULL;
     for (int i = 0; i < bullets.size(); i++) {
-        float x = bullets[i]->x - posX;
-        float y = bullets[i]->y - posY;
-        float dist = x*x + y*y;
+        float dist = (bullets[i]->pos - pos).sq_magnitude();
         if (dist < radiusSq){
             radiusSq = dist;
             closest = bullets[i];
@@ -180,21 +174,21 @@ void Game::destroy(foe* victim, bool byClearing)
 void Game::collision()
 {
     int topX, topY, bottomX, bottomY;
-    topX = player->getPos().x + ((float)HIDDEN_PLAYER_SCALE/2);
-    topY = player->getPos().y + ((float)HIDDEN_PLAYER_SCALE/2);
-    bottomX = player->getPos().x - ((float)HIDDEN_PLAYER_SCALE/2);
-    bottomY = player->getPos().y - ((float)HIDDEN_PLAYER_SCALE/2);
+    topX = player->getPos().pos.x + ((float)HIDDEN_PLAYER_SCALE/2);
+    topY = player->getPos().pos.y + ((float)HIDDEN_PLAYER_SCALE/2);
+    bottomX = player->getPos().pos.x - ((float)HIDDEN_PLAYER_SCALE/2);
+    bottomY = player->getPos().pos.y - ((float)HIDDEN_PLAYER_SCALE/2);
 
     for(int i = things.size() - 1; i >= 0; i--)
     {
-        int _topX = things[i]->getPos().x + ((float)things[i]->getPos().scaleX/2);
-        int _topY = things[i]->getPos().y + ((float)things[i]->getPos().scaleY/2);
-        int _bottomX = things[i]->getPos().x - ((float)things[i]->getPos().scaleX/2);
-        int _bottomY = things[i]->getPos().y - ((float)things[i]->getPos().scaleY/2);
+        int _topX = things[i]->getPos().pos.x + ((float)things[i]->getPos().scale.x/2);
+        int _topY = things[i]->getPos().pos.y + ((float)things[i]->getPos().scale.y/2);
+        int _bottomX = things[i]->getPos().pos.x - ((float)things[i]->getPos().scale.x/2);
+        int _bottomY = things[i]->getPos().pos.y - ((float)things[i]->getPos().scale.y/2);
         bool skip = false;
         for (int j = bullets.size() - 1; j >= 0; j--) {
-            if (!(_topX>bullets[j]->x && bullets[j]->x>_bottomX &&
-                _topY>bullets[j]->y&&bullets[j]->y>_bottomY))
+            if (!(_topX > bullets[j]->pos.x && bullets[j]->pos.x > _bottomX &&
+                _topY > bullets[j]->pos.y && bullets[j]->pos.y > _bottomY))
                 continue;
 
             destroy(i); 
@@ -222,10 +216,9 @@ void Game::moveObjects()
         things[i]->move();
     }
     for(int i = bullets.size() - 1; i >= 0; i--) {
-        bullets[i]->x += bullets[i]->speedX * deltaTime;
-        bullets[i]->y += bullets[i]->speedY * deltaTime;
-        if (bullets[i]->x > GRID_SIZE_X*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->x <= BULLET_SIZE/2 ||
-            bullets[i]->y > GRID_SIZE_Y*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->y <= BULLET_SIZE/2) {
+        bullets[i]->pos += bullets[i]->speed * deltaTime;
+        if (bullets[i]->pos.x > GRID_SIZE_X*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->pos.x <= BULLET_SIZE/2 ||
+            bullets[i]->pos.y > GRID_SIZE_Y*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->pos.y <= BULLET_SIZE/2) {
             bullet* bt = bullets[i];
             bullets.erase(bullets.begin() + i);
             delete bt;

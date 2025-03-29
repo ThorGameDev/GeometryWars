@@ -10,8 +10,7 @@
 
 struct GameSprite {
     SDL_Texture* texture;    
-    int width;
-    int height;
+    Vector2 dimensions;
 };
 
 static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
@@ -24,8 +23,7 @@ static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
     SDL_Surface* surface = IMG_Load(full_path); 
     sprite->texture = SDL_CreateTextureFromSurface(renderer, surface); 
 
-    sprite->width = surface->w;
-    sprite->height = surface->h;
+    sprite->dimensions = Vector2(surface->w, surface->h);
     SDL_DestroySurface(surface);
     SDL_free(full_path);
 
@@ -33,8 +31,7 @@ static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
 }
 
 void ScreenDrawer::init() {
-    cam.x = (GRID_SIZE_X*GRID_UNIT_SCALE) / 2;
-    cam.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) / 2;
+    cam.pos = Vector2(GRID_SIZE_X, GRID_SIZE_Y) * GRID_UNIT_SCALE / 2;
 }
 
 ScreenDrawer::ScreenDrawer(Game* master) {
@@ -78,23 +75,22 @@ ScreenDrawer::~ScreenDrawer() {
 }
 
 void ScreenDrawer::drawSquare(float x, float y, float scaleX, float scaleY, int r, int g, int b) {
-    x -= cam.x - SCREEN_X/2;
-    y -= cam.y - SCREEN_Y/2;
+    x -= cam.pos.x - SCREEN_X/2;
+    y -= cam.pos.y - SCREEN_Y/2;
     SDL_SetRenderDrawColor(renderer, r,  g, b, 255);
     SDL_FRect rect = {x - scaleX/2, y - scaleY/2, scaleX, scaleY};
     SDL_RenderFillRect(renderer, &rect);
 }
 
 void ScreenDrawer::drawSprite(transform pos, int index) {
-    pos.x -= cam.x - SCREEN_X/2;
-    pos.y -= cam.y - SCREEN_Y/2;
-    SDL_FRect rect = {pos.x - pos.scaleX/2, pos.y - pos.scaleY/2, pos.scaleX, pos.scaleY};
+    //std::cout << "x: " << pos.pos.x << " y: " << pos.pos.y << " i: " << index << std::endl;
+    pos.pos -= cam.pos - Vector2(SCREEN_X, SCREEN_Y)/2;
+    SDL_FRect rect = {pos.pos.x - pos.scale.x/2, pos.pos.y - pos.scale.y/2, pos.scale.x, pos.scale.y};
     SDL_RenderTextureRotated(renderer, sprites[index]->texture, NULL, &rect, pos.theta, NULL, SDL_FLIP_NONE);
 }
 
 void ScreenDrawer::frame() {
-    cam.x = cam.x + (cam.master->getPlayerPos().x - cam.x) * CAMERA_INTERP_SPEED * cam.master->deltaTime;
-    cam.y = cam.y + (cam.master->getPlayerPos().y - cam.y) * CAMERA_INTERP_SPEED * cam.master->deltaTime;
+    cam.pos += (cam.master->getPlayerPos().pos - cam.pos) * CAMERA_INTERP_SPEED * cam.master->deltaTime;
     SDL_UpdateWindowSurface(window);
     SDL_RenderPresent(renderer);
     

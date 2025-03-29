@@ -20,8 +20,7 @@ protected:
 };
 
 class pinwheel : public foe {
-    float speedX;
-    float speedY;
+    Vector2 speed;
 public:
     pinwheel(transform pos, Game* master);
     void move() override;
@@ -29,8 +28,7 @@ public:
 };
 
 class diamond : public foe {
-    float speedX;
-    float speedY;
+    Vector2 speed;
     float birthday;
 public:
     diamond(transform pos, Game* master);
@@ -39,8 +37,7 @@ public:
 };
 
 class bubble : public foe {
-    float speedX;
-    float speedY;
+    Vector2 speed;
 public:
     bubble(transform pos, Game* master);
     void move() override;
@@ -48,8 +45,7 @@ public:
 };
 
 class splitSquare : public foe {
-    float speedX;
-    float speedY;
+    Vector2 speed;
 public:
     splitSquare(transform pos, Game* master); 
     void move() override;
@@ -57,17 +53,15 @@ public:
 };
 
 class subSquare : public foe {
-    float speedX;
-    float speedY;
+    Vector2 speed;
 public:
-    subSquare(transform pos, Game* master, float speedX, float speedY);
+    subSquare(transform pos, Game* master, Vector2 speed);
     void move() override;
     void death(bool byClearing) override;
 };
 
 class greenSquare : public foe {
-    float speedX;
-    float speedY;
+    Vector2 speed;
     void chase();
     void dodge(bullet* bullet);
 public:

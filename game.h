@@ -21,8 +21,8 @@ class Game
         bool lost = false;
         float deltaTime;
         transform getPlayerPos();
-        bullet* getNearestBullet(float posX, float posY, float radiusSq);
-        void shoot(float posX, float posY, float speedX, float speedY);
+        bullet* getNearestBullet(Vector2 pos, float radiusSq);
+        void shoot(Vector2 pos, Vector2 speed);
         void instantiate(foe* creation);
         
         float playtime = 0;

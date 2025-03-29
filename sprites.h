@@ -1,6 +1,7 @@
 #ifndef SPRITES
 #define SPRITES
 
+#include "utils.h"
 #include <vector>
 class SDL_Renderer;
 class SDL_Window;
@@ -9,8 +10,7 @@ class transform;
 class Game;
 
 struct camera {
-    float x;
-    float y;
+    Vector2 pos;
     Game* master;
 };
 
