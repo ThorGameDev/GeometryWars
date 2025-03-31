@@ -11,7 +11,6 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_keycode.h>
-#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -212,9 +211,33 @@ void Game::collision()
 
 void Game::moveObjects()
 {
-    for(int i = things.size() - 1; i >= 0; i--) {
-        things[i]->move();
+    if (MULTI_THREADED){
+        int numThreads = std::thread::hardware_concurrency();
+        std::vector<std::thread> threads;
+
+        // Split the work across available threads
+        size_t chunkSize = things.size() / numThreads;
+        for (int t = 0; t < numThreads; t++) {
+            threads.push_back(std::thread([&, t]() {
+                size_t start = t * chunkSize;
+                size_t end = (t == numThreads - 1) ? things.size() : start + chunkSize;
+                for (size_t i = start; i < end; ++i) {
+                    things[i]->move();
+                }
+            }));
+        }
+
+        // Join all threads
+        for (auto& th : threads) {
+            th.join();
+        }
     }
+    else {
+        for (int i = things.size() - 1; i >= 0; i--){
+            things[i]->move();
+        }
+    }
+
     for(int i = bullets.size() - 1; i >= 0; i--) {
         bullets[i]->pos += bullets[i]->speed * deltaTime;
         if (bullets[i]->pos.x > GRID_SIZE_X*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->pos.x <= BULLET_SIZE/2 ||

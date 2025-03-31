@@ -38,7 +38,7 @@ const float GREEN_SQUARE_PANIC_SQDISTANCE = 5500;
 const float GREEN_SQUARE_PANIC_SPEED = 400;
 const float GREEN_SQUARE_PANIC_ROTATION_SPEED = -400;
 
-const int MAX_FOES = 1000;
+const int MAX_FOES = 10000;
 const int MIN_DIST_FROM_PLAYER = 300;
 
 //Player
@@ -73,8 +73,9 @@ const int GRID_UNIT_SCALE = 32;
 
 //Testing
 const bool MUSIC = false;
+const bool MULTI_THREADED = false; // Multi threading is slower on my device. Needs tested on device with more than 2 threads, and web.
 const bool PLAYER_IMORTAL = false;
-const bool SHOW_FPS = false;
+const bool SHOW_FPS = true;
 const bool MAXIMUM_INITIAL_INTENSITY = false;
 const int LAG_MS = 0;
 

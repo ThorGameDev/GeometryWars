@@ -29,7 +29,10 @@ Player::Player(Game* master) {
 }
 
 Player::~Player(){
-
+    if (controller) {
+        SDL_CloseGamepad(controller);
+        controller = NULL;
+    }
 }
 
 void Player::move()
@@ -47,6 +50,10 @@ void Player::move()
 
     while(SDL_PollEvent(&Event))
     {
+        if (Event.type == SDL_EVENT_QUIT) {
+            master->quitting = true;
+            return;
+        }
         if (Event.type == SDL_EVENT_GAMEPAD_ADDED) {
             if (controller == NULL){
                 controller = SDL_OpenGamepad(Event.gdevice.which);
@@ -60,10 +67,6 @@ void Player::move()
                 SDL_CloseGamepad(controller);  /* our joystick was unplugged. */
                 controller = NULL;
             }
-        }
-        else if (Event.type == SDL_EVENT_QUIT)
-        {
-            master->quitting = true;
         }
         else if (Event.type == SDL_EVENT_KEY_DOWN)
         {
