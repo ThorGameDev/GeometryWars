@@ -66,9 +66,29 @@ const int BULLET_SHAKE_MS = 40;
 const float DEATH_SHAKE = 1;
 const int DEATH_SHAKE_MS = 200;
 
+//Particle System
+const float PARTICLE_DEATH_LIFETIME = 0.8;
+const float PARTICLE_DEATH_SPEED_MIN = 200;
+const float PARTICLE_DEATH_SPEED_MAX = 450;
+const int PARTICLE_DEATH_COUNT_MIN = 15;
+const int PARTICLE_DEATH_COUNT_MAX = 25;
+
+const float PARTICLE_BULLET_LIFETIME = 0.1;
+const float PARTICLE_BULLET_SPEED_MIN = 250;
+const float PARTICLE_BULLET_SPEED_MAX = 450;
+const float PARTICLE_BULLET_ARC = 0.25;
+const int PARTICLE_BULLET_COUNT_MIN = 0;
+const int PARTICLE_BULLET_COUNT_MAX = 2;
+
+const float PARTICLE_SPAWN_LIFETIME = 0.7;
+const float PARTICLE_SPAWN_SPEED_MIN = 30;
+const float PARTICLE_SPAWN_SPEED_MAX = 60;
+const int PARTICLE_SPAWN_COUNT_MIN = 3;
+const int PARTICLE_SPAWN_COUNT_MAX = 4;
+
 //Grid
-const int GRID_SIZE_X = 30;
-const int GRID_SIZE_Y = 20;
+const int GRID_SIZE_X = 50;
+const int GRID_SIZE_Y = 30;
 const int GRID_UNIT_SCALE = 32;
 
 //Testing

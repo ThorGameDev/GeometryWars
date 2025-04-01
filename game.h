@@ -5,11 +5,12 @@
 #include <deque>
 #include "utils.h"
 #include "CONST.h"
-#include "sprites.h"
-#include "AudioPlayer.h"
 
 class foe;
 class Player;
+class ParticleSystem;
+class AudioPlayer;
+class ScreenDrawer;
 
 class Game
 {
@@ -34,11 +35,12 @@ class Game
         float subSquareDeltaSpeedConv;
         float greenSquareDeltaSpeedConv;
 
+        //Particle System
+        ParticleSystem* particleSys;
+
         // Diagnostics
         float fpsSum;
         int framesElapsed;
-
-
     private:
         //Timing
         std::chrono::time_point<std::chrono::steady_clock> lastMeasure;
@@ -70,7 +72,7 @@ class Game
         Player* player;
 
         //Sound
-        AudioPlayer audio;
+        AudioPlayer* audio;
         
         //Images
         ScreenDrawer* drawer;

@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "sprites.h"
 #include "game.h"
+#include "particles.h"
 #include <cmath>
 #include <iostream>
 #include <ostream>
@@ -32,6 +33,7 @@ pinwheel::pinwheel(transform pos, Game* master) : foe(pos, 1, master) {
     this->pos.scale = PINWHEEL_SCALE;
     float angle = RNG::Float(0, 360); 
     speed = Vector2(std::cos(angle), std::sin(angle)) * PINWHEEL_SPEED;
+    master->particleSys->spawn(pos.pos, spriteID + 1);
 }
 
 void pinwheel::move() {
@@ -43,15 +45,17 @@ void pinwheel::move() {
 }
 
 void pinwheel::death(bool byClearing) {
+    master->particleSys->death(pos.pos, spriteID + 1);
     return;
 }
 
-diamond::diamond(transform pos, Game* master) : foe(pos, 2, master) {
+diamond::diamond(transform pos, Game* master) : foe(pos, 3, master) {
     this->pos.theta = 0;
     this->pos.scale = DIAMOND_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * DIAMOND_SPEED;
     birthday = master->playtime - RNG::Float(0, DIAMOND_SQUISH_SPEED * M_PI);
+    master->particleSys->spawn(pos.pos, spriteID + 1);
 }
 
 void diamond::move() {
@@ -67,14 +71,16 @@ void diamond::move() {
 }
 
 void diamond::death(bool byClearing) {
+    master->particleSys->death(pos.pos, spriteID + 1);
     return;
 }
 
-bubble::bubble(transform pos, Game* master) : foe(pos, 3, master) {
+bubble::bubble(transform pos, Game* master) : foe(pos, 5, master) {
     this->pos.theta = 0;
     this->pos.scale = BUBBLE_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * BUBBLE_SPEED;
+    master->particleSys->spawn(pos.pos, spriteID + 1);
 }
 
 void bubble::move() {
@@ -86,14 +92,16 @@ void bubble::move() {
 }
 
 void bubble::death(bool byClearing) {
+    master->particleSys->death(pos.pos, spriteID + 1);
     return;
 }
 
-splitSquare::splitSquare(transform pos, Game* master) : foe(pos, 4, master) {
+splitSquare::splitSquare(transform pos, Game* master) : foe(pos, 7, master) {
     this->pos.theta = 0;
     this->pos.scale = SPLIT_SQUARE_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * SPLIT_SQUARE_SPEED;
+    master->particleSys->spawn(pos.pos, spriteID + 1);
 }
 
 void splitSquare::move() {
@@ -112,10 +120,11 @@ void splitSquare::death(bool byClearing) {
         master->instantiate(new subSquare(pos, master, Vector2(-diag, diag)));
         master->instantiate(new subSquare(pos, master, Vector2(-diag, -diag)));
     }
+    master->particleSys->death(pos.pos, spriteID + 1);
     return;
 }
 
-subSquare::subSquare(transform pos, Game* master, Vector2 speed) : foe(pos, 5, master) {
+subSquare::subSquare(transform pos, Game* master, Vector2 speed) : foe(pos, 9, master) {
     this->pos.theta = 0;
     this->pos.scale = SUB_SQUARE_SCALE;
     this->speed = speed;
@@ -130,21 +139,22 @@ void subSquare::move() {
 }
 
 void subSquare::death(bool byClearing) {
+    master->particleSys->death(pos.pos, spriteID + 1);
     return;
 }
 
-greenSquare::greenSquare(transform pos, Game* master) : foe(pos, 6, master) {
+greenSquare::greenSquare(transform pos, Game* master) : foe(pos, 11, master) {
     this->pos.theta = RNG::Float(0, 360);
     this->pos.scale = GREEN_SQUARE_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * GREEN_SQUARE_SPEED;
+    master->particleSys->spawn(pos.pos, spriteID + 1);
 }
 
 void greenSquare::chase() {
     pos.theta += GREEN_SQUARE_ROTATION_SPEED * master->deltaTime;
     if (pos.theta > 360)
         pos.theta -= 360;
-
     Vector2 redir = master->getPlayerPos().pos - pos.pos;
     redir = speed + redir.normalized() * master->greenSquareDeltaSpeedConv;
     speed = redir.normalized() * GREEN_SQUARE_SPEED;
@@ -177,5 +187,6 @@ void greenSquare::move() {
 }
 
 void greenSquare::death(bool byClearing) {
+    master->particleSys->death(pos.pos, spriteID + 1);
     return;
 }

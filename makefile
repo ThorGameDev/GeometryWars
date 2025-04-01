@@ -2,7 +2,7 @@
 CXX = clang++
 
 # Define the source files
-SOURCES = ./game.cpp ./AudioPlayer.cpp ./sprites.cpp ./utils.cpp ./foe.cpp ./player.cpp
+SOURCES = ./game.cpp ./AudioPlayer.cpp ./sprites.cpp ./utils.cpp ./foe.cpp ./player.cpp ./particles.cpp
 
 # Define the object files
 OBJECTS = $(SOURCES:.cpp=.ll)

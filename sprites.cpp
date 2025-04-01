@@ -42,13 +42,20 @@ ScreenDrawer::ScreenDrawer(Game* master) {
     }
     SDL_SetRenderLogicalPresentation(renderer, SCREEN_X, SCREEN_Y, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    sprites.push_back(LoadSprite("resources/player.png", renderer));
-    sprites.push_back(LoadSprite("resources/pinwheel.png", renderer));
-    sprites.push_back(LoadSprite("resources/diamond.png", renderer));
-    sprites.push_back(LoadSprite("resources/bubble.png", renderer));
-    sprites.push_back(LoadSprite("resources/splitSquare.png", renderer));
-    sprites.push_back(LoadSprite("resources/subSquare.png", renderer));
-    sprites.push_back(LoadSprite("resources/greenSquare.png", renderer));
+    sprites.push_back(LoadSprite("resources/player.png", renderer));             // 0
+    sprites.push_back(LoadSprite("resources/pinwheel.png", renderer));           // 1
+    sprites.push_back(LoadSprite("resources/pinwheelGradient.png", renderer));   // 2 
+    sprites.push_back(LoadSprite("resources/diamond.png", renderer));            // 3
+    sprites.push_back(LoadSprite("resources/diamondGradient.png", renderer));    // 4
+    sprites.push_back(LoadSprite("resources/bubble.png", renderer));             // 5
+    sprites.push_back(LoadSprite("resources/bubbleGradient.png", renderer));     // 6
+    sprites.push_back(LoadSprite("resources/splitSquare.png", renderer));        // 7
+    sprites.push_back(LoadSprite("resources/splitSquareGradient.png", renderer));// 8
+    sprites.push_back(LoadSprite("resources/subSquare.png", renderer));          // 9
+    sprites.push_back(LoadSprite("resources/subSquareGradient.png", renderer));  // 10
+    sprites.push_back(LoadSprite("resources/greenSquare.png", renderer));        // 11
+    sprites.push_back(LoadSprite("resources/greenSquareGradient.png", renderer));// 12
+    sprites.push_back(LoadSprite("resources/gradient.png", renderer));           // 13
     gridOffset = sprites.size();
     for(int i = 0; i <= 15; i++){
         char str[26];

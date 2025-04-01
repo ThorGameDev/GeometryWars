@@ -5,6 +5,7 @@
 #include "sprites.h"
 #include "AudioPlayer.h"
 #include "foe.h"
+#include "particles.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_stdinc.h>
@@ -23,22 +24,22 @@
 #include <emscripten.h>
 #endif
 
-void Game::newGame()
-{
+void Game::newGame() {
     intensity = 1;
     timeTillWave = TIME_PER_WAVE;
     lost = false;
     lostTime = 0;
-    audio.playSong();
     player->init();
     drawer->init();
+    audio->playSong();
     lastMeasure = std::chrono::steady_clock::now();
 }
 
-Game::Game()
-{
+Game::Game() {
     player = new Player(this);
     drawer = new ScreenDrawer(this);
+    audio = new AudioPlayer();
+    particleSys = new ParticleSystem(drawer, this);
     newGame();
     if (MAXIMUM_INITIAL_INTENSITY) {
         intensity = MAX_FOES;
@@ -47,22 +48,22 @@ Game::Game()
     std::cout << "Game has been created" << std::endl;
 }
 
-Game::~Game()
-{
+Game::~Game() {
     delete player;
+    delete audio;
+    delete particleSys;
     delete drawer;
     SDL_Quit();
     std::cout << "Game has been destroyed" << std::endl;
 }
 
-transform Game::getPlayerPos(){
+transform Game::getPlayerPos() {
     return player->getPos();
 }
 
-void Game::requestRender()
-{
-    for (int x = 0; x < GRID_SIZE_X; x++){
-        for (int y = 0; y < GRID_SIZE_Y; y++){
+void Game::requestRender() {
+    for (int x = 0; x < GRID_SIZE_X; x++) {
+        for (int y = 0; y < GRID_SIZE_Y; y++) {
             transform gridthing;
             gridthing.pos = Vector2(x, y)*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
             gridthing.scale = GRID_UNIT_SCALE;
@@ -73,26 +74,21 @@ void Game::requestRender()
         }
     }
     for (int i = 0; i < things.size(); i++)
-    {
         drawer->drawSprite(things[i]->getPos(), things[i]->getSpriteID());
-    }
-    for (int i = 0; i < bullets.size(); i++) 
-    {
+    for (int i = 0; i < bullets.size(); i++)
         drawer->drawSquare(bullets[i]->pos.x, bullets[i]->pos.y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
-    }
+    particleSys->render();
     drawer->drawSprite(player->getPos(), 0);
     
     drawer->frame();
 }
 
-void Game::spawn()
-{
+void Game::spawn() {
     int num = intensity;
     if (num > MAX_FOES - things.size())
         num = MAX_FOES - things.size();
 
-    for(int i = 0; i < num; i++)
-    {
+    for(int i = 0; i < num; i++) {
         transform pos;
         do {
             pos.pos.x = RNG::Float(0, GRID_SIZE_X*GRID_UNIT_SCALE);
@@ -113,27 +109,25 @@ void Game::spawn()
     }
 }
 
-void Game::instantiate(foe* creation)
-{
+void Game::instantiate(foe* creation) {
     if (MAX_FOES > things.size())
         things.push_back(creation);
     else 
         destroy(creation);
 }
 
-void Game::shoot(Vector2 pos, Vector2 speed)
-{
+void Game::shoot(Vector2 pos, Vector2 speed) {
     bullet* projectile = new bullet();
     projectile->pos = pos;
     projectile->speed = speed;
     bullets.push_back(projectile);
 }
 
-bullet* Game::getNearestBullet(Vector2 pos, float radiusSq){
+bullet* Game::getNearestBullet(Vector2 pos, float radiusSq) {
     bullet* closest = NULL;
     for (int i = 0; i < bullets.size(); i++) {
         float dist = (bullets[i]->pos - pos).sq_magnitude();
-        if (dist < radiusSq){
+        if (dist < radiusSq) {
             radiusSq = dist;
             closest = bullets[i];
         }
@@ -141,11 +135,9 @@ bullet* Game::getNearestBullet(Vector2 pos, float radiusSq){
     return closest;
 }
 
-void Game::manageWaves()
-{
+void Game::manageWaves() {
     timeTillWave -= deltaTime;
-    if (timeTillWave <= 0)
-    {
+    if (timeTillWave <= 0) {
         timeTillWave += TIME_PER_WAVE;
         //int choice = randomRange(0, 2);
         spawn();
@@ -156,30 +148,26 @@ void Game::manageWaves()
     }
 }
 
-void Game::destroy(int victimID, bool byClearing)
-{
+void Game::destroy(int victimID, bool byClearing) {
     foe* thing = things[victimID];
     thing->death(byClearing);
     things.erase(things.begin() + victimID);
     delete thing;
 }
 
-void Game::destroy(foe* victim, bool byClearing)
-{
+void Game::destroy(foe* victim, bool byClearing) {
     victim->death(byClearing);
     delete victim;
 }
 
-void Game::collision()
-{
+void Game::collision() {
     int topX, topY, bottomX, bottomY;
     topX = player->getPos().pos.x + ((float)HIDDEN_PLAYER_SCALE/2);
     topY = player->getPos().pos.y + ((float)HIDDEN_PLAYER_SCALE/2);
     bottomX = player->getPos().pos.x - ((float)HIDDEN_PLAYER_SCALE/2);
     bottomY = player->getPos().pos.y - ((float)HIDDEN_PLAYER_SCALE/2);
 
-    for(int i = things.size() - 1; i >= 0; i--)
-    {
+    for(int i = things.size() - 1; i >= 0; i--) {
         int _topX = things[i]->getPos().pos.x + ((float)things[i]->getPos().scale.x/2);
         int _topY = things[i]->getPos().pos.y + ((float)things[i]->getPos().scale.y/2);
         int _bottomX = things[i]->getPos().pos.x - ((float)things[i]->getPos().scale.x/2);
@@ -194,7 +182,9 @@ void Game::collision()
 
             bullet* bt = bullets[j];
             bullets.erase(bullets.begin() + j);
+            particleSys->bullet(bt->pos, std::atan2(bt->speed.y, bt->speed.x));
             delete bt;
+
 
             skip = true;
             break;
@@ -209,9 +199,8 @@ void Game::collision()
     }
 }
 
-void Game::moveObjects()
-{
-    if (MULTI_THREADED){
+void Game::moveObjects() {
+    if (MULTI_THREADED) {
         int numThreads = std::thread::hardware_concurrency();
         std::vector<std::thread> threads;
 
@@ -233,9 +222,8 @@ void Game::moveObjects()
         }
     }
     else {
-        for (int i = things.size() - 1; i >= 0; i--){
+        for (int i = things.size() - 1; i >= 0; i--)
             things[i]->move();
-        }
     }
 
     for(int i = bullets.size() - 1; i >= 0; i--) {
@@ -244,14 +232,15 @@ void Game::moveObjects()
             bullets[i]->pos.y > GRID_SIZE_Y*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->pos.y <= BULLET_SIZE/2) {
             bullet* bt = bullets[i];
             bullets.erase(bullets.begin() + i);
+            particleSys->bullet(bt->pos, std::atan2(bt->speed.y, bt->speed.x));
             delete bt;
         }
     }
+    particleSys->move();
     player->move();
 }
 
-void Game::loopItteration()
-{
+void Game::loopItteration() {
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
     float timeElapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - lastMeasure).count();
     lastMeasure = now;
@@ -259,10 +248,10 @@ void Game::loopItteration()
     
     playtime += deltaTime;
 
-    if (SHOW_FPS){
+    if (SHOW_FPS) {
         fpsSum += deltaTime;
         framesElapsed += 1;
-        if (fpsSum >= 1){
+        if (fpsSum >= 1) {
             std::cout << "FPS: " << framesElapsed << std::endl;
             fpsSum -= 1;
             framesElapsed = 0;
@@ -279,39 +268,34 @@ void Game::loopItteration()
         manageWaves();
     moveObjects();
     collision();
-    if(player->isDead())
-    {
-        for (int i = things.size() - 1; i >= 0; i--){
+    if(player->isDead()) {
+        for (int i = things.size() - 1; i >= 0; i--)
             destroy(i, true);
-        }
-        audio.pauseSong();
+        audio->pauseSong();
         lostTime += deltaTime;
         if(lostTime >= 2)
             newGame();
     }
 
-    audio.checkRestart();
+    audio->checkRestart();
     requestRender();
 }
 
 Game game;
 
 #ifdef __EMSCRIPTEN__
-static void mainloop()
-{
+static void mainloop() {
     if (game.quitting)
         emscripten_cancel_main_loop();
     game.loopItteration();
-
+}
 #endif
 
-int main(int argc, char* argv[]) 
-{
+int main(int argc, char* argv[]) {
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(mainloop, 0, 1);
 #else
-    while(!game.quitting)
-    {
+    while(!game.quitting) {
         if (LAG_MS > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(LAG_MS));
         game.loopItteration();

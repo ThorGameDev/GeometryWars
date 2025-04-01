@@ -136,12 +136,10 @@ void Player::move()
 
     Vector2 dir = Vector2(right - left, down - up);
 
-    /*
     if (controller && dir.magnitude() == 0){
         dir.x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTX)) / 32767.0f);
         dir.y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
     }
-    */
     if (pos.pos.x >= (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scale.x/2 && dir.x > 0) {
         dir.x = 0;
         pos.pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scale.x/2;
