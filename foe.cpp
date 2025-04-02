@@ -10,17 +10,17 @@
 
 
 void bump(transform* pos, Vector2* speed){
-    if (pos->pos.x > GRID_SIZE_X*GRID_UNIT_SCALE - pos->scale.x/2) {
+    if (pos->pos.x > GRID_SIZE.x*GRID_UNIT_SCALE - pos->scale.x/2) {
         speed->x = -speed->x;
-        pos->pos.x = GRID_SIZE_X*GRID_UNIT_SCALE - pos->scale.x/2;
+        pos->pos.x = GRID_SIZE.x*GRID_UNIT_SCALE - pos->scale.x/2;
     }
     else if (pos->pos.x < pos->scale.x/2) {
         speed->x = -speed->x;
         pos->pos.x = pos->scale.x/2;
     }
-    else if (pos->pos.y > GRID_SIZE_Y*GRID_UNIT_SCALE - pos->scale.y/2) {
+    else if (pos->pos.y > GRID_SIZE.y*GRID_UNIT_SCALE - pos->scale.y/2) {
         speed->y = -speed->y;
-        pos->pos.y = GRID_SIZE_Y*GRID_UNIT_SCALE - pos->scale.y/2;
+        pos->pos.y = GRID_SIZE.y*GRID_UNIT_SCALE - pos->scale.y/2;
     }
     else if (pos->pos.y < pos->scale.y/2) {
         speed->y = -speed->y;
@@ -33,7 +33,7 @@ pinwheel::pinwheel(transform pos, Game* master) : foe(pos, 1, master) {
     this->pos.scale = PINWHEEL_SCALE;
     float angle = RNG::Float(0, 360); 
     speed = Vector2(std::cos(angle), std::sin(angle)) * PINWHEEL_SPEED;
-    master->particleSys->spawn(pos.pos, spriteID + 1);
+    master->particleSys->spawn(pos.pos, spriteID);
 }
 
 void pinwheel::move() {
@@ -45,17 +45,17 @@ void pinwheel::move() {
 }
 
 void pinwheel::death(bool byClearing) {
-    master->particleSys->death(pos.pos, spriteID + 1);
+    master->particleSys->death(pos.pos, spriteID);
     return;
 }
 
-diamond::diamond(transform pos, Game* master) : foe(pos, 3, master) {
+diamond::diamond(transform pos, Game* master) : foe(pos, 2, master) {
     this->pos.theta = 0;
     this->pos.scale = DIAMOND_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * DIAMOND_SPEED;
     birthday = master->playtime - RNG::Float(0, DIAMOND_SQUISH_SPEED * M_PI);
-    master->particleSys->spawn(pos.pos, spriteID + 1);
+    master->particleSys->spawn(pos.pos, spriteID);
 }
 
 void diamond::move() {
@@ -71,16 +71,16 @@ void diamond::move() {
 }
 
 void diamond::death(bool byClearing) {
-    master->particleSys->death(pos.pos, spriteID + 1);
+    master->particleSys->death(pos.pos, spriteID);
     return;
 }
 
-bubble::bubble(transform pos, Game* master) : foe(pos, 5, master) {
+bubble::bubble(transform pos, Game* master) : foe(pos, 3, master) {
     this->pos.theta = 0;
     this->pos.scale = BUBBLE_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * BUBBLE_SPEED;
-    master->particleSys->spawn(pos.pos, spriteID + 1);
+    master->particleSys->spawn(pos.pos, spriteID);
 }
 
 void bubble::move() {
@@ -92,16 +92,16 @@ void bubble::move() {
 }
 
 void bubble::death(bool byClearing) {
-    master->particleSys->death(pos.pos, spriteID + 1);
+    master->particleSys->death(pos.pos, spriteID);
     return;
 }
 
-splitSquare::splitSquare(transform pos, Game* master) : foe(pos, 7, master) {
+splitSquare::splitSquare(transform pos, Game* master) : foe(pos, 4, master) {
     this->pos.theta = 0;
     this->pos.scale = SPLIT_SQUARE_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * SPLIT_SQUARE_SPEED;
-    master->particleSys->spawn(pos.pos, spriteID + 1);
+    master->particleSys->spawn(pos.pos, spriteID);
 }
 
 void splitSquare::move() {
@@ -120,11 +120,11 @@ void splitSquare::death(bool byClearing) {
         master->instantiate(new subSquare(pos, master, Vector2(-diag, diag)));
         master->instantiate(new subSquare(pos, master, Vector2(-diag, -diag)));
     }
-    master->particleSys->death(pos.pos, spriteID + 1);
+    master->particleSys->death(pos.pos, spriteID);
     return;
 }
 
-subSquare::subSquare(transform pos, Game* master, Vector2 speed) : foe(pos, 9, master) {
+subSquare::subSquare(transform pos, Game* master, Vector2 speed) : foe(pos, 5, master) {
     this->pos.theta = 0;
     this->pos.scale = SUB_SQUARE_SCALE;
     this->speed = speed;
@@ -139,16 +139,16 @@ void subSquare::move() {
 }
 
 void subSquare::death(bool byClearing) {
-    master->particleSys->death(pos.pos, spriteID + 1);
+    master->particleSys->death(pos.pos, spriteID);
     return;
 }
 
-greenSquare::greenSquare(transform pos, Game* master) : foe(pos, 11, master) {
+greenSquare::greenSquare(transform pos, Game* master) : foe(pos, 6, master) {
     this->pos.theta = RNG::Float(0, 360);
     this->pos.scale = GREEN_SQUARE_SCALE;
     Vector2 dir = master->getPlayerPos().pos - pos.pos;
     speed = dir.normalized() * GREEN_SQUARE_SPEED;
-    master->particleSys->spawn(pos.pos, spriteID + 1);
+    master->particleSys->spawn(pos.pos, spriteID);
 }
 
 void greenSquare::chase() {
@@ -166,7 +166,7 @@ void greenSquare::dodge(bullet* bt) {
         pos.theta -= 360;
     Vector2 bulletMotion = bt->speed / BULLET_SPEED;
 
-    Vector2 dir = pos.pos - bt->pos;
+    Vector2 dir = pos.pos - bt->pos.pos;
 
     float dodgeDist1 = dir.x * bulletMotion.y - dir.y * bulletMotion.x;
     float dodgeDist2 = - dir.x * bulletMotion.y + dir.y * bulletMotion.x;

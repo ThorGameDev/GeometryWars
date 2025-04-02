@@ -12,7 +12,7 @@
 #include <ostream>
 
 void Player::init() {
-    pos.pos = Vector2(GRID_SIZE_X, GRID_SIZE_Y) * GRID_UNIT_SCALE / 2;
+    pos.pos = GRID_SIZE * GRID_UNIT_SCALE / 2;
     pos.theta = 0;
     pos.scale = PLAYER_SCALE;
     targetRotation = 0;
@@ -140,17 +140,17 @@ void Player::move()
         dir.x = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTX)) / 32767.0f);
         dir.y = (((float) SDL_GetGamepadAxis(controller, SDL_GAMEPAD_AXIS_LEFTY)) / 32767.0f);
     }
-    if (pos.pos.x >= (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scale.x/2 && dir.x > 0) {
+    if (pos.pos.x >= (GRID_SIZE.x*GRID_UNIT_SCALE) - pos.scale.x/2 && dir.x > 0) {
         dir.x = 0;
-        pos.pos.x = (GRID_SIZE_X*GRID_UNIT_SCALE) - pos.scale.x/2;
+        pos.pos.x = (GRID_SIZE.x*GRID_UNIT_SCALE) - pos.scale.x/2;
     }
     if (pos.pos.x <= pos.scale.x/2 && dir.x < 0) {
         dir.x = 0;
         pos.pos.x = pos.scale.x/2;
     }
-    if (pos.pos.y >= (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scale.y/2 && dir.y > 0) {
+    if (pos.pos.y >= (GRID_SIZE.x*GRID_UNIT_SCALE) - pos.scale.y/2 && dir.y > 0) {
         dir.y = 0;
-        pos.pos.y = (GRID_SIZE_Y*GRID_UNIT_SCALE) - pos.scale.y/2;
+        pos.pos.y = (GRID_SIZE.x*GRID_UNIT_SCALE) - pos.scale.y/2;
     }
     if (pos.pos.y <= pos.scale.y/2 && dir.y < 0) {
         dir.y = 0;

@@ -62,13 +62,13 @@ transform Game::getPlayerPos() {
 }
 
 void Game::requestRender() {
-    for (int x = 0; x < GRID_SIZE_X; x++) {
-        for (int y = 0; y < GRID_SIZE_Y; y++) {
+    for (int x = 0; x < GRID_SIZE.x; x++) {
+        for (int y = 0; y < GRID_SIZE.y; y++) {
             transform gridthing;
             gridthing.pos = Vector2(x, y)*GRID_UNIT_SCALE + GRID_UNIT_SCALE/2;
             gridthing.scale = GRID_UNIT_SCALE;
             gridthing.theta = 0;
-            int tileID = (y != 0) | (2 * (x != 0)) | (4 * (x != GRID_SIZE_X - 1)) | (8 * (y != GRID_SIZE_Y - 1));
+            int tileID = (y != 0) | (2 * (x != 0)) | (4 * (x != GRID_SIZE.x - 1)) | (8 * (y != GRID_SIZE.y - 1));
             int spt = drawer->getGridOffset() + tileID;
             drawer->drawSprite(gridthing, spt);
         }
@@ -76,7 +76,7 @@ void Game::requestRender() {
     for (int i = 0; i < things.size(); i++)
         drawer->drawSprite(things[i]->getPos(), things[i]->getSpriteID());
     for (int i = 0; i < bullets.size(); i++)
-        drawer->drawSquare(bullets[i]->pos.x, bullets[i]->pos.y, BULLET_SIZE, BULLET_SIZE, 255, 255, 255);
+        drawer->drawSprite(bullets[i]->pos, 7);
     particleSys->render();
     drawer->drawSprite(player->getPos(), 0);
     
@@ -91,9 +91,8 @@ void Game::spawn() {
     for(int i = 0; i < num; i++) {
         transform pos;
         do {
-            pos.pos.x = RNG::Float(0, GRID_SIZE_X*GRID_UNIT_SCALE);
-            pos.pos.y = RNG::Float(0, GRID_SIZE_Y*GRID_UNIT_SCALE);
-        } while (std::sqrt(std::pow(pos.pos.x - player->getPos().pos.x, 2) + std::pow(pos.pos.y - player->getPos().pos.y, 2)) < MIN_DIST_FROM_PLAYER);
+            pos.pos = RNG::ToVector(GRID_SIZE*GRID_UNIT_SCALE);
+        } while ((pos.pos - player->getPos().pos).magnitude() < MIN_DIST_FROM_PLAYER);
 
         int idx = RNG::Int(0, 100);
         if (idx <= 50)
@@ -118,15 +117,17 @@ void Game::instantiate(foe* creation) {
 
 void Game::shoot(Vector2 pos, Vector2 speed) {
     bullet* projectile = new bullet();
-    projectile->pos = pos;
+    projectile->pos.pos = pos;
+    projectile->pos.scale = BULLET_SIZE;
     projectile->speed = speed;
+    projectile->pos.theta = std::atan2(speed.y, speed.x) * 180 / M_PI + 90;
     bullets.push_back(projectile);
 }
 
 bullet* Game::getNearestBullet(Vector2 pos, float radiusSq) {
     bullet* closest = NULL;
     for (int i = 0; i < bullets.size(); i++) {
-        float dist = (bullets[i]->pos - pos).sq_magnitude();
+        float dist = (bullets[i]->pos.pos - pos).sq_magnitude();
         if (dist < radiusSq) {
             radiusSq = dist;
             closest = bullets[i];
@@ -174,20 +175,25 @@ void Game::collision() {
         int _bottomY = things[i]->getPos().pos.y - ((float)things[i]->getPos().scale.y/2);
         bool skip = false;
         for (int j = bullets.size() - 1; j >= 0; j--) {
-            if (!(_topX > bullets[j]->pos.x && bullets[j]->pos.x > _bottomX &&
-                _topY > bullets[j]->pos.y && bullets[j]->pos.y > _bottomY))
-                continue;
+            int topX = bullets[j]->pos.pos.x + ((float)BULLET_BOX/2);
+            int topY = bullets[j]->pos.pos.y + ((float)BULLET_BOX/2);
+            int bottomX = bullets[j]->pos.pos.x - ((float)BULLET_BOX/2);
+            int bottomY = bullets[j]->pos.pos.y - ((float)BULLET_BOX/2);
 
-            destroy(i); 
+            if( !(_topX<bottomX||topX<_bottomX) &&
+                !(_topY<bottomY||topY<_bottomY)  ) {
 
-            bullet* bt = bullets[j];
-            bullets.erase(bullets.begin() + j);
-            particleSys->bullet(bt->pos, std::atan2(bt->speed.y, bt->speed.x));
-            delete bt;
+                destroy(i); 
+
+                bullet* bt = bullets[j];
+                bullets.erase(bullets.begin() + j);
+                particleSys->bullet(bt->pos.pos, bt->pos.theta);
+                delete bt;
 
 
-            skip = true;
-            break;
+                skip = true;
+                break;
+            }
         }
         if (skip) continue;
         if( !(_topX<bottomX||topX<_bottomX) &&
@@ -227,12 +233,12 @@ void Game::moveObjects() {
     }
 
     for(int i = bullets.size() - 1; i >= 0; i--) {
-        bullets[i]->pos += bullets[i]->speed * deltaTime;
-        if (bullets[i]->pos.x > GRID_SIZE_X*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->pos.x <= BULLET_SIZE/2 ||
-            bullets[i]->pos.y > GRID_SIZE_Y*GRID_UNIT_SCALE - BULLET_SIZE/2 || bullets[i]->pos.y <= BULLET_SIZE/2) {
+        bullets[i]->pos.pos += bullets[i]->speed * deltaTime;
+        if (bullets[i]->pos.pos.x > GRID_SIZE.x*GRID_UNIT_SCALE - BULLET_BOX/2 || bullets[i]->pos.pos.x <= BULLET_BOX/2 ||
+            bullets[i]->pos.pos.y > GRID_SIZE.y*GRID_UNIT_SCALE - BULLET_BOX/2 || bullets[i]->pos.pos.y <= BULLET_BOX/2) {
             bullet* bt = bullets[i];
             bullets.erase(bullets.begin() + i);
-            particleSys->bullet(bt->pos, std::atan2(bt->speed.y, bt->speed.x));
+            particleSys->bullet(bt->pos.pos, bt->pos.theta);
             delete bt;
         }
     }

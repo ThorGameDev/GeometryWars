@@ -1,9 +1,10 @@
 #ifndef CONSTANT_DEFINITIONS
 #define CONSTANT_DEFINITIONS
 
+#include "utils.h"
+
 //Camera
-const int SCREEN_X = 980;
-const int SCREEN_Y = 640;
+const Vector2 SCREEN_SIZE = {980, 640};
 const float CAMERA_INTERP_SPEED = 3;
 
 //foes
@@ -38,7 +39,7 @@ const float GREEN_SQUARE_PANIC_SQDISTANCE = 5500;
 const float GREEN_SQUARE_PANIC_SPEED = 400;
 const float GREEN_SQUARE_PANIC_ROTATION_SPEED = -400;
 
-const int MAX_FOES = 10000;
+const int MAX_FOES = 5000;
 const int MIN_DIST_FROM_PLAYER = 300;
 
 //Player
@@ -49,7 +50,8 @@ const int PLAYER_ROTATE_SPEED = 4;
 
 const float TIME_PER_BULLET = 0.08;
 const float BULLET_SPEED = 900;
-const float BULLET_SIZE = 3;
+const Vector2 BULLET_SIZE = Vector2(8,11);
+const int BULLET_BOX = 10;
 const float BULLET_PAIR_DIST = 3;
 
 const float BULLET_SUB_STREAMS = 1;
@@ -87,13 +89,12 @@ const int PARTICLE_SPAWN_COUNT_MIN = 3;
 const int PARTICLE_SPAWN_COUNT_MAX = 4;
 
 //Grid
-const int GRID_SIZE_X = 50;
-const int GRID_SIZE_Y = 30;
+const Vector2 GRID_SIZE = {50, 30};
 const int GRID_UNIT_SCALE = 32;
 
 //Testing
 const bool MUSIC = false;
-const bool MULTI_THREADED = false; // Multi threading is slower on my device. Needs tested on device with more than 2 threads, and web.
+const bool MULTI_THREADED = false; // Multi threading is slower for some reason.
 const bool PLAYER_IMORTAL = false;
 const bool SHOW_FPS = true;
 const bool MAXIMUM_INITIAL_INTENSITY = false;

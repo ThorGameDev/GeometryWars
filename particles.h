@@ -10,9 +10,11 @@ struct particle {
     Vector2 speed;
     float theta;
     float life;
-    int idx;
+    float r;
+    float g;
+    float b;
     particle(Vector2 pos, Vector2 speed, float theta, float lifetime, int idx) : 
-        pos(pos), speed(speed), theta(theta), life(lifetime), idx(idx) {};
+        pos(pos), speed(speed), theta(theta), life(lifetime), r(r), g(g), b(b) {};
 };
 class ScreenDrawer;
 class Game;
@@ -28,8 +30,8 @@ public:
     ~ParticleSystem();
     void move();
     void render();
-    void death(Vector2 pos, int spriteIndex);
-    void spawn(Vector2 pos, int spriteIndex);
+    void death(Vector2 pos, int colorIndex);
+    void spawn(Vector2 pos, int colorIndex);
     void bullet(Vector2 pos, float radians);
 };
 

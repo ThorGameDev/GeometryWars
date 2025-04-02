@@ -41,33 +41,33 @@ void ParticleSystem::move() {
 
 void ParticleSystem::render() {
     for(int i = 0; i < deathParticles.size(); i++)
-        drawer->drawSprite({deathParticles[i]->pos, Vector2(5,18), deathParticles[i]->theta}, deathParticles[i]->idx);
+        drawer->drawSprite({deathParticles[i]->pos, Vector2(5,18), deathParticles[i]->theta}, 7);
     for(int i = 0; i < spawnParticles.size(); i++)
-        drawer->drawSprite({spawnParticles[i]->pos, Vector2(3,10), spawnParticles[i]->theta}, spawnParticles[i]->idx);
+        drawer->drawSprite({spawnParticles[i]->pos, Vector2(3,10), spawnParticles[i]->theta}, 7);
     for(int i = 0; i < bulletParticles.size(); i++)
-        drawer->drawSprite({bulletParticles[i]->pos, Vector2(4,14), bulletParticles[i]->theta}, bulletParticles[i]->idx);
+        drawer->drawSprite({bulletParticles[i]->pos, Vector2(4,14), bulletParticles[i]->theta}, 7);
 }
 
-void ParticleSystem::death(Vector2 pos, int spriteIndex) {
+void ParticleSystem::death(Vector2 pos, int colorIndex) {
     int num_particles = RNG::Int(PARTICLE_DEATH_COUNT_MIN, PARTICLE_DEATH_COUNT_MAX);
     for(int i = 0; i < num_particles; i++) {
         float theta = RNG::Float(0, 360);
         float thetaRad = theta * M_PI / 180;
         float speedMult = RNG::Float(PARTICLE_DEATH_SPEED_MIN, PARTICLE_DEATH_SPEED_MAX);
         Vector2 speed = Vector2(std::cos(thetaRad), std::sin(thetaRad));
-        particle* p = new particle(pos + speed, speed * speedMult, theta + 90, PARTICLE_DEATH_LIFETIME, spriteIndex);
+        particle* p = new particle(pos + speed, speed * speedMult, theta + 90, PARTICLE_DEATH_LIFETIME, colorIndex);
         deathParticles.push_front(p);
     }
 }
 
-void ParticleSystem::spawn(Vector2 pos, int spriteIndex) {
+void ParticleSystem::spawn(Vector2 pos, int colorIndex) {
     int num_particles = 360/RNG::Int(PARTICLE_SPAWN_COUNT_MIN, PARTICLE_SPAWN_COUNT_MAX);
     bool flip = RNG::Int(0, 1);
     float speedMult = RNG::Float(PARTICLE_SPAWN_SPEED_MIN, PARTICLE_SPAWN_SPEED_MAX) * (flip ? 1 : -1);
     for(int i = 0; i < 360; i+= num_particles) {
         float thetaRad = i * M_PI / 180;
         Vector2 speed = Vector2(std::cos(thetaRad + 90), std::sin(thetaRad + 90));
-        particle* p = new particle(pos + speed*10, speed * speedMult, i + 180, PARTICLE_SPAWN_LIFETIME, spriteIndex);
+        particle* p = new particle(pos + speed*10, speed * speedMult, i + 180, PARTICLE_SPAWN_LIFETIME, colorIndex);
         spawnParticles.push_front(p);
     }
 }

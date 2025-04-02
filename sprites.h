@@ -23,8 +23,8 @@ class ScreenDrawer {
 public:
     ScreenDrawer(Game* master);
     ~ScreenDrawer();
-    void drawSquare(float x, float y, float scaleX, float scaleY, int r, int g, int b);
     void drawSprite(transform pos, int index);
+    void drawColoredSprite(transform pos, int index, float r, float g, float b, float a);
     void frame();
     void init();
     int getGridOffset() { return gridOffset; };

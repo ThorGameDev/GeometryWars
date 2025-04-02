@@ -2,10 +2,6 @@
 #define UTILS
 
 #include <cmath>
-namespace RNG {
-    int Int(int min, int max);
-    float Float(float min, float max);
-}
 
 struct Vector2 {
     float x;
@@ -95,6 +91,12 @@ struct Vector2 {
 
 };
 
+namespace RNG {
+    int Int(int min, int max);
+    float Float(float min, float max);
+    Vector2 ToVector(Vector2 vec);
+}
+
 struct transform {
     Vector2 pos = Vector2();
     Vector2 scale = Vector2();
@@ -102,7 +104,7 @@ struct transform {
 };
 
 struct bullet {
-    Vector2 pos = Vector2();
+    transform pos = transform();
     Vector2 speed = Vector2();
 };
 
