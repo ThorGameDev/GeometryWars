@@ -11,9 +11,10 @@
 struct GameSprite {
     SDL_Texture* texture;    
     Vector2 dimensions;
+    int colorPallet;
 };
 
-static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
+static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer, int colorPallet = -1) {
     GameSprite* sprite = new GameSprite();
     char *full_path = NULL;
 
@@ -27,6 +28,8 @@ static GameSprite* LoadSprite(const char* path, SDL_Renderer* renderer) {
     SDL_DestroySurface(surface);
     SDL_free(full_path);
 
+    sprite->colorPallet = colorPallet;
+
     return sprite;
 }
 
@@ -36,20 +39,21 @@ void ScreenDrawer::init() {
 
 ScreenDrawer::ScreenDrawer(Game* master) {
     SDL_Init(SDL_INIT_VIDEO );
-    if (!SDL_CreateWindowAndRenderer("RescizableRectangles", SCREEN_SIZE.x, SCREEN_SIZE.y, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("GeometryWars", SCREEN_SIZE.x, SCREEN_SIZE.y, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         exit(1);
     }
     SDL_SetRenderLogicalPresentation(renderer, SCREEN_SIZE.x, SCREEN_SIZE.y, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    sprites.push_back(LoadSprite("resources/player.png", renderer));             // 0
-    sprites.push_back(LoadSprite("resources/pinwheel.png", renderer));           // 1
-    sprites.push_back(LoadSprite("resources/diamond.png", renderer));            // 2
-    sprites.push_back(LoadSprite("resources/bubble.png", renderer));             // 3
-    sprites.push_back(LoadSprite("resources/splitSquare.png", renderer));        // 4
-    sprites.push_back(LoadSprite("resources/subSquare.png", renderer));          // 5
-    sprites.push_back(LoadSprite("resources/greenSquare.png", renderer));        // 6
-    sprites.push_back(LoadSprite("resources/gradient.png", renderer));           // 7
+    sprites.push_back(LoadSprite("resources/player.png", renderer));            // 0
+    sprites.push_back(LoadSprite("resources/pinwheel.png", renderer, 0));       // 1
+    sprites.push_back(LoadSprite("resources/diamond.png", renderer, 1));        // 2
+    sprites.push_back(LoadSprite("resources/bubble.png", renderer, 2));         // 3
+    sprites.push_back(LoadSprite("resources/splitSquare.png", renderer, 3));    // 4
+    sprites.push_back(LoadSprite("resources/subSquare.png", renderer, 3));      // 5
+    sprites.push_back(LoadSprite("resources/greenSquare.png", renderer, 4));    // 6
+    sprites.push_back(LoadSprite("resources/bullet.png", renderer));            // 7
+    sprites.push_back(LoadSprite("resources/gradient.png", renderer));          // 8
     gridOffset = sprites.size();
     for(int i = 0; i <= 15; i++){
         char str[26];
@@ -81,7 +85,11 @@ void ScreenDrawer::drawSprite(transform pos, int index) {
     SDL_RenderTextureRotated(renderer, sprites[index]->texture, NULL, &rect, pos.theta, NULL, SDL_FLIP_NONE);
 }
 
-void ScreenDrawer::drawColoredSprite(transform pos, int index, float r, float g, float b, float a) {
+void ScreenDrawer::drawColoredSprite(transform pos, int index, int pallet, float a) {
+    int r = PARTICLE_COLOR_R[pallet];
+    int g = PARTICLE_COLOR_G[pallet];
+    int b = PARTICLE_COLOR_B[pallet];
+    SDL_SetTextureColorMod(sprites[index]->texture, r, g, b);
     pos.pos -= cam.pos - (SCREEN_SIZE - pos.scale)/2;
     SDL_FRect rect = {pos.pos.x, pos.pos.y, pos.scale.x, pos.scale.y};
     SDL_RenderTextureRotated(renderer, sprites[index]->texture, NULL, &rect, pos.theta, NULL, SDL_FLIP_NONE);
@@ -94,4 +102,8 @@ void ScreenDrawer::frame() {
     
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+}
+
+int ScreenDrawer::getPallet(int spriteID) {
+    return sprites[spriteID]->colorPallet;
 }

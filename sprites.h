@@ -24,10 +24,11 @@ public:
     ScreenDrawer(Game* master);
     ~ScreenDrawer();
     void drawSprite(transform pos, int index);
-    void drawColoredSprite(transform pos, int index, float r, float g, float b, float a);
+    void drawColoredSprite(transform pos, int index, int pallet, float a);
     void frame();
     void init();
     int getGridOffset() { return gridOffset; };
+    int getPallet(int spriteID);
 };
 
 #endif

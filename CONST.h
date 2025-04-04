@@ -50,12 +50,12 @@ const int PLAYER_ROTATE_SPEED = 4;
 
 const float TIME_PER_BULLET = 0.08;
 const float BULLET_SPEED = 900;
-const Vector2 BULLET_SIZE = Vector2(8,11);
-const int BULLET_BOX = 10;
+const Vector2 BULLET_SIZE = Vector2(7,14);
+const int BULLET_BOX = 12;
 const float BULLET_PAIR_DIST = 3;
 
 const float BULLET_SUB_STREAMS = 1;
-const float BULLET_STREAM_ANGLE_VARIANCE = 0.1;
+const float BULLET_STREAM_ANGLE_VARIANCE = 0.25;
 const float BULLET_STREAM_SPEED_VARIANCE = 50;
 
 //Wave Management
@@ -78,7 +78,7 @@ const int PARTICLE_DEATH_COUNT_MAX = 25;
 const float PARTICLE_BULLET_LIFETIME = 0.1;
 const float PARTICLE_BULLET_SPEED_MIN = 250;
 const float PARTICLE_BULLET_SPEED_MAX = 450;
-const float PARTICLE_BULLET_ARC = 0.25;
+const float PARTICLE_BULLET_ARC = 0.05;
 const int PARTICLE_BULLET_COUNT_MIN = 0;
 const int PARTICLE_BULLET_COUNT_MAX = 2;
 
@@ -87,6 +87,10 @@ const float PARTICLE_SPAWN_SPEED_MIN = 30;
 const float PARTICLE_SPAWN_SPEED_MAX = 60;
 const int PARTICLE_SPAWN_COUNT_MIN = 3;
 const int PARTICLE_SPAWN_COUNT_MAX = 4;
+
+const int PARTICLE_COLOR_R[5] = {255, 148, 80 , 244, 152};
+const int PARTICLE_COLOR_G[5] = {197, 210, 181, 143, 255};
+const int PARTICLE_COLOR_B[5] = {244, 255, 255, 255, 138};
 
 //Grid
 const Vector2 GRID_SIZE = {50, 30};

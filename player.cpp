@@ -37,8 +37,6 @@ Player::~Player(){
 
 void Player::move()
 {
-    if (dead) return;
-
     static bool up;
     static bool down;
     static bool left;
@@ -133,6 +131,7 @@ void Player::move()
         }
     }
 
+    if (dead) return;
 
     Vector2 dir = Vector2(right - left, down - up);
 

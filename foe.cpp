@@ -187,6 +187,6 @@ void greenSquare::move() {
 }
 
 void greenSquare::death(bool byClearing) {
-    master->particleSys->death(pos.pos, spriteID + 1);
+    master->particleSys->death(pos.pos, spriteID);
     return;
 }

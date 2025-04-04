@@ -4,6 +4,9 @@
 #include "game.h"
 #include "utils.h"
 #include <cmath>
+#include <deque>
+#include <iostream>
+#include <utility>
 
 inline void pop(std::deque<particle*>* target) {
     particle* p = target->back();
@@ -11,75 +14,77 @@ inline void pop(std::deque<particle*>* target) {
     delete p;
 }
 
-inline void moveParticles(std::deque<particle*>* target, float dt) {
-    for(int i = 0; i < target->size(); i++) {
-        (*target)[i]->pos += (*target)[i]->speed * dt; 
-        (*target)[i]->life -= dt;
-    }
-    for(int i = 0; i < target->size(); i++) {
-        if (target->back()->life <= 0) 
-            pop(target);
-        else { break; }
-    }
+ParticleSystem::ParticleSystem(ScreenDrawer* drawer, Game* master) : drawer(drawer), master(master) {
+    std::cout << "ParticleSystem has been created" << std::endl;
 }
 
 ParticleSystem::~ParticleSystem() {
-    for(int i = deathParticles.size() - 1; i >= 0; i--)
-        pop(&deathParticles);
-    for(int i = spawnParticles.size() - 1; i >= 0; i--)
-        pop(&spawnParticles);
-    for(int i = bulletParticles.size() - 1; i >= 0; i--)
-        pop(&bulletParticles);
+    for (auto sys : particles)
+        for(int i = sys.second.size() - 1; i >= 0; i--)
+            pop(&sys.second);
+    std::cout << "ParticleSystem has been destroyed" << std::endl;
 }
 
 void ParticleSystem::move() {
     float dt = master->deltaTime;
-    moveParticles(&deathParticles, dt);
-    moveParticles(&spawnParticles, dt);
-    moveParticles(&bulletParticles, dt);
+    for (auto system : particles) {
+        auto key = system.first;
+        for(int i = 0; i < particles[key].size(); i++) {
+            particles[key][i]->pos += particles[key][i]->speed * dt; 
+            particles[key][i]->life -= dt;
+        }
+        for(int i = 0; i < particles[key].size(); i++) {
+            if (particles[key].back()->life <= 0) {
+                pop(&particles[key]);
+            }
+            else { break; }
+        }
+
+    }
 }
 
 void ParticleSystem::render() {
-    for(int i = 0; i < deathParticles.size(); i++)
-        drawer->drawSprite({deathParticles[i]->pos, Vector2(5,18), deathParticles[i]->theta}, 7);
-    for(int i = 0; i < spawnParticles.size(); i++)
-        drawer->drawSprite({spawnParticles[i]->pos, Vector2(3,10), spawnParticles[i]->theta}, 7);
-    for(int i = 0; i < bulletParticles.size(); i++)
-        drawer->drawSprite({bulletParticles[i]->pos, Vector2(4,14), bulletParticles[i]->theta}, 7);
+    for (auto sys : particles)
+        for(int i = 0; i < sys.second.size(); i++)
+            drawer->drawColoredSprite({sys.second[i]->pos, Vector2(4,14), sys.second[i]->theta}, 
+                8, sys.first.first, 255);
 }
 
-void ParticleSystem::death(Vector2 pos, int colorIndex) {
+void ParticleSystem::death(Vector2 pos, int spriteIndex) {
     int num_particles = RNG::Int(PARTICLE_DEATH_COUNT_MIN, PARTICLE_DEATH_COUNT_MAX);
+    auto key = std::make_pair(drawer->getPallet(spriteIndex), PARTICLE_DEATH_LIFETIME);
     for(int i = 0; i < num_particles; i++) {
         float theta = RNG::Float(0, 360);
         float thetaRad = theta * M_PI / 180;
         float speedMult = RNG::Float(PARTICLE_DEATH_SPEED_MIN, PARTICLE_DEATH_SPEED_MAX);
         Vector2 speed = Vector2(std::cos(thetaRad), std::sin(thetaRad));
-        particle* p = new particle(pos + speed, speed * speedMult, theta + 90, PARTICLE_DEATH_LIFETIME, colorIndex);
-        deathParticles.push_front(p);
+        particle* p = new particle(pos + speed, speed * speedMult, theta + 90, PARTICLE_DEATH_LIFETIME);
+        particles[key].push_front(p);
     }
 }
 
-void ParticleSystem::spawn(Vector2 pos, int colorIndex) {
+void ParticleSystem::spawn(Vector2 pos, int spriteIndex) {
     int num_particles = 360/RNG::Int(PARTICLE_SPAWN_COUNT_MIN, PARTICLE_SPAWN_COUNT_MAX);
     bool flip = RNG::Int(0, 1);
     float speedMult = RNG::Float(PARTICLE_SPAWN_SPEED_MIN, PARTICLE_SPAWN_SPEED_MAX) * (flip ? 1 : -1);
+    auto key = std::make_pair(drawer->getPallet(spriteIndex), PARTICLE_SPAWN_LIFETIME);
     for(int i = 0; i < 360; i+= num_particles) {
         float thetaRad = i * M_PI / 180;
         Vector2 speed = Vector2(std::cos(thetaRad + 90), std::sin(thetaRad + 90));
-        particle* p = new particle(pos + speed*10, speed * speedMult, i + 180, PARTICLE_SPAWN_LIFETIME, colorIndex);
-        spawnParticles.push_front(p);
+        particle* p = new particle(pos + speed*10, speed * speedMult, i + 90, PARTICLE_SPAWN_LIFETIME);
+        particles[key].push_front(p);
     }
 }
 
-void ParticleSystem::bullet(Vector2 pos, float radians) {
+void ParticleSystem::bullet(Vector2 pos, float theta) {
     int num_particles = RNG::Int(PARTICLE_BULLET_COUNT_MIN, PARTICLE_BULLET_COUNT_MAX);
+    auto key = std::make_pair(0, PARTICLE_BULLET_LIFETIME);
     for(int i = 0; i < num_particles; i++) {
-        float theta = RNG::Float(radians - M_PI*PARTICLE_BULLET_ARC, radians + M_PI*PARTICLE_BULLET_ARC)+M_PI;
-        float thetaDeg = theta * 180 / M_PI;
+        float thetaDeg = RNG::Float(theta - 180*PARTICLE_BULLET_ARC, theta + 180*PARTICLE_BULLET_ARC) + 90;
+        float thetaRad = thetaDeg * M_PI / 180;
         float speedMult = RNG::Float(PARTICLE_BULLET_SPEED_MIN, PARTICLE_BULLET_SPEED_MAX);
-        Vector2 speed = Vector2(std::cos(theta), std::sin(theta));
-        particle* p = new particle(pos + speed, speed * speedMult, thetaDeg + 90, PARTICLE_DEATH_LIFETIME, 13);
-        bulletParticles.push_front(p);
+        Vector2 speed = Vector2(std::cos(thetaRad), std::sin(thetaRad));
+        particle* p = new particle(pos + speed, speed * speedMult, thetaDeg + 90, PARTICLE_BULLET_LIFETIME);
+        particles[key].push_front(p);
     }
 }

@@ -8,7 +8,7 @@ SOURCES = ./game.cpp ./AudioPlayer.cpp ./sprites.cpp ./utils.cpp ./foe.cpp ./pla
 OBJECTS = $(SOURCES:.cpp=.ll)
 
 # Define the flags
-CXXFLAGS = -O3 -ffast-math -march=native -flto
+CXXFLAGS = -O3 -ffast-math -march=native -flto -g
 
 # SDL flags
 #`pkg-config --libs --cflags sdl3`

@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include <deque>
+#include <map>
 #include <queue>
 
 struct particle {
@@ -10,29 +11,25 @@ struct particle {
     Vector2 speed;
     float theta;
     float life;
-    float r;
-    float g;
-    float b;
-    particle(Vector2 pos, Vector2 speed, float theta, float lifetime, int idx) : 
-        pos(pos), speed(speed), theta(theta), life(lifetime), r(r), g(g), b(b) {};
+    particle(Vector2 pos, Vector2 speed, float theta, float lifetime) : 
+        pos(pos), speed(speed), theta(theta), life(lifetime) {};
 };
 class ScreenDrawer;
 class Game;
 
 class ParticleSystem {
-    std::deque<particle*> deathParticles;
-    std::deque<particle*> spawnParticles;
-    std::deque<particle*> bulletParticles;
+    /// {<index, lifetime>, particles}
+    std::map<std::pair<int, float>, std::deque<particle*>> particles;
     ScreenDrawer* drawer;
     Game* master;
 public:
-    ParticleSystem(ScreenDrawer* drawer, Game* master) : drawer(drawer), master(master) {};
+    ParticleSystem(ScreenDrawer* drawer, Game* master);
     ~ParticleSystem();
     void move();
     void render();
-    void death(Vector2 pos, int colorIndex);
-    void spawn(Vector2 pos, int colorIndex);
-    void bullet(Vector2 pos, float radians);
+    void death(Vector2 pos, int spriteIndex);
+    void spawn(Vector2 pos, int spriteIndex);
+    void bullet(Vector2 pos, float theta);
 };
 
 #endif
